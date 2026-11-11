@@ -79,6 +79,9 @@
 
     if (!modal) return;
 
+    // Referencia al cupón que está validado en el modal
+    let pendingCoupon = null;
+
     function openModal() {
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
@@ -87,15 +90,30 @@
 
     function closeModal() {
       modal.classList.add('hidden');
-      errorAlert && errorAlert.classList.add('hidden');
+      errorAlert?.classList.add('hidden');
+      successAlert?.classList.add('hidden');
       document.body.style.overflow = '';
+      pendingCoupon = null;
+      resetApplyBtn();
     }
 
-    function applyCoupon() {
+    function resetApplyBtn() {
+      if (applyBtn) {
+        applyBtn.innerHTML = `<span class="material-symbols-outlined text-sm">verified</span><span>Validar Código</span>`;
+        applyBtn.classList.remove('bg-emerald-500', 'border-emerald-400', 'text-black');
+        applyBtn.classList.add('bg-gradient-to-r', 'from-secondary', 'to-primary', 'text-white');
+      }
+    }
+
+    // 1. SOLO VALIDA Y MUESTRA EL CARTEL VERDE
+    function validateCoupon() {
       const rawCode = (input?.value || '').trim().toUpperCase();
+      
       if (!rawCode) {
-        errorAlert?.classList.remove('hidden');
+        errorAlert?.classList.add('hidden');
         successAlert?.classList.add('hidden');
+        pendingCoupon = null;
+        resetApplyBtn();
         return;
       }
 
@@ -111,6 +129,7 @@
       }
 
       if (couponData) {
+        pendingCoupon = couponData;
         const isPercent = couponData.type === 'PERCENT';
         const val = couponData.value;
         const typeStr = isPercent ? '%' : '$';
@@ -118,29 +137,53 @@
         errorAlert?.classList.add('hidden');
         successAlert?.classList.remove('hidden');
         if (successMsg) {
-          successMsg.innerText = `¡CUPÓN ${rawCode} ACTIVADO! ${typeStr}${val} OFF aplicado.`;
+          successMsg.innerText = `¡CUPÓN VÁLIDO! ${rawCode} aplica ${typeStr}${val} de descuento.`;
         }
 
-        btnTexts.forEach((el) => {
-          if (el) el.innerText = `Cupón: ${typeStr}${val} OFF`;
-        });
-
-        if (navBtn) {
-          navBtn.classList.remove('from-secondary', 'to-primary');
-          navBtn.classList.add('from-emerald-500', 'via-teal-600', 'to-primary', 'border-emerald-400');
+        // Cambiamos el texto del botón para que diga "Aplicar Descuento"
+        if (applyBtn) {
+          applyBtn.innerHTML = `<span class="material-symbols-outlined text-sm">check_circle</span><span>Aplicar Descuento</span>`;
+          applyBtn.classList.remove('bg-gradient-to-r', 'from-secondary', 'to-primary', 'text-white');
+          applyBtn.classList.add('bg-emerald-500', 'border-emerald-400', 'text-black');
         }
-
-        updateAllPrices(couponData);
       } else {
+        pendingCoupon = null;
         errorAlert?.classList.remove('hidden');
         successAlert?.classList.add('hidden');
+        resetApplyBtn();
       }
+    }
+
+    // 2. APLICA REALMENTE EL DESCUENTO Y CIERRA EL MODAL
+    function applyCoupon() {
+      if (!pendingCoupon) {
+        validateCoupon();
+        return;
+      }
+
+      const rawCode = pendingCoupon.code;
+      const isPercent = pendingCoupon.type === 'PERCENT';
+      const val = pendingCoupon.value;
+      const typeStr = isPercent ? '%' : '$';
+
+      btnTexts.forEach((el) => {
+        if (el) el.innerText = `Cupón: ${typeStr}${val} OFF`;
+      });
+
+      if (navBtn) {
+        navBtn.classList.remove('from-secondary', 'to-primary');
+        navBtn.classList.add('from-emerald-500', 'via-teal-600', 'to-primary', 'border-emerald-400');
+      }
+
+      updateAllPrices(pendingCoupon);
+      closeModal(); // Cierra el modal tras aplicar
     }
 
     function removeCoupon() {
       if (input) input.value = '';
       successAlert?.classList.add('hidden');
       errorAlert?.classList.add('hidden');
+      pendingCoupon = null;
 
       btnTexts.forEach((el) => {
         if (el) el.innerText = 'Canjear Cupón';
@@ -150,10 +193,12 @@
         navBtn.classList.remove('from-emerald-500', 'via-teal-600', 'border-emerald-400');
         navBtn.classList.add('from-secondary', 'to-primary');
       }
-
+      
+      resetApplyBtn();
       updateAllPrices({ type: 'PERCENT', value: 0 });
     }
 
+    // Actualizar precios en la interfaz
     function updateAllPrices(discountData) {
       const isPercent = discountData.type === 'PERCENT';
       const val = discountData.value;
@@ -220,18 +265,33 @@
       });
     }
 
+    // Event Listeners
     openBtns.forEach((btn) => btn && btn.addEventListener('click', openModal));
+    
+    // Al tocar aplicar, ejecuta applyCoupon()
     applyBtn && applyBtn.addEventListener('click', applyCoupon);
 
+    // Al tipear en el input, ejecuta validateCoupon()
+    input && input.addEventListener('input', validateCoupon);
+
     $$('[data-close-coupon]').forEach((btn) => btn.addEventListener('click', closeModal));
+    
+    // Al tocar un chip, setea el valor y ejecuta validateCoupon()
     $$('[data-coupon]').forEach((btn) => btn.addEventListener('click', () => {
-      if (input) input.value = btn.getAttribute('data-coupon');
-      applyCoupon();
+      if (input) {
+        input.value = btn.getAttribute('data-coupon');
+        validateCoupon();
+      }
     }));
+    
     $$('[data-remove-coupon]').forEach((btn) => btn.addEventListener('click', removeCoupon));
 
+    // Al presionar Enter, aplica el cupón
     input && input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); }
+      if (e.key === 'Enter') { 
+        e.preventDefault(); 
+        applyCoupon(); 
+      }
     });
 
     window.addEventListener('keydown', (e) => {
@@ -242,12 +302,13 @@
       if (e.target === modal) closeModal();
     });
 
-    // Chequear si viene un cupón por URL al cargar la página
+    // Chequeo automático si viene por URL
     const urlParams = new URLSearchParams(window.location.search);
     const cuponParam = urlParams.get('cupon');
     if (cuponParam) {
       if (input) input.value = cuponParam;
-      setTimeout(() => applyCoupon(), 300);
+      validateCoupon(); // Lo valida y muestra el cartel
+      openModal(); // Abre el modal para que el usuario vea que hay un cupón listo para aplicar
     }
   }
 
