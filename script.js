@@ -8,6 +8,9 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => root.querySelectorAll(sel);
 
+  // Variables globales para el simulador y descuentos
+  let currentGlobalDiscount = null;
+
   // --- Lógica de Confirmación y Notificaciones Personalizadas ---
   window.showConfirm = function(title, message, onAccept) {
     const modal = document.getElementById('custom-confirm-modal');
@@ -97,7 +100,69 @@
   }
 
   /* ============================================================
-     2. SISTEMA DE CUPONES
+     2. SIMULADOR DE PRESUPUESTO (COTIZADOR)
+     ============================================================ */
+  window.updateSimulatorUI = function() {
+    const select = document.getElementById('sim-service-select');
+    const priceDisplay = document.getElementById('sim-price');
+    const discountBadge = document.getElementById('sim-discount-badge');
+    const waBtn = document.getElementById('sim-whatsapp-btn');
+
+    if (!select || !select.value) {
+      priceDisplay.innerText = '$ 0';
+      discountBadge.innerText = '';
+      if (waBtn) waBtn.classList.add('pointer-events-none', 'opacity-50');
+      return;
+    }
+
+    const selectedOption = select.options[select.selectedIndex];
+    const serviceName = select.value;
+    let basePrice = parseInt(selectedOption.getAttribute('data-price')) || 0;
+    
+    let finalPrice = basePrice;
+    let hasDiscount = false;
+
+    // Si hay un cupón global activo, calcular descuento
+    if (currentGlobalDiscount && currentGlobalDiscount.value > 0) {
+      const applyToAll = !currentGlobalDiscount.services || currentGlobalDiscount.services.length === 0;
+      const appliesToThis = applyToAll || currentGlobalDiscount.services.includes(serviceName);
+
+      if (appliesToThis) {
+        hasDiscount = true;
+        if (currentGlobalDiscount.type === 'PERCENT') {
+          finalPrice = Math.round(basePrice * (1 - currentGlobalDiscount.value / 100));
+          discountBadge.innerText = `-${currentGlobalDiscount.value}% OFF`;
+        } else {
+          finalPrice = Math.max(0, basePrice - currentGlobalDiscount.value);
+          discountBadge.innerText = `-$${currentGlobalDiscount.value.toLocaleString('es-AR')} OFF`;
+        }
+      }
+    }
+
+    // Actualizar precio
+    priceDisplay.innerText = `$ ${finalPrice.toLocaleString('es-AR')}`;
+    
+    // Estilos si tiene descuento
+    if (hasDiscount) {
+      discountBadge.className = 'text-xs text-secondary font-mono font-bold bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/30';
+      priceDisplay.classList.add('text-secondary', 'drop-shadow-[0_0_10px_rgba(255,0,127,0.5)]');
+      priceDisplay.classList.remove('text-primary', 'drop-shadow-[0_0_10px_rgba(0,240,255,0.4)]');
+    } else {
+      discountBadge.innerText = '';
+      priceDisplay.classList.remove('text-secondary', 'drop-shadow-[0_0_10px_rgba(255,0,127,0.5)]');
+      priceDisplay.classList.add('text-primary', 'drop-shadow-[0_0_10px_rgba(0,240,255,0.4)]');
+    }
+
+    // Configurar botón de WhatsApp
+    if (waBtn) {
+      waBtn.classList.remove('pointer-events-none', 'opacity-50');
+      const msg = encodeURIComponent(`Hola FBG Servicio Técnico. Estoy usando el cotizador de la web. Me interesa el servicio de: *${serviceName}*.\n\nCosto estimado: $${finalPrice.toLocaleString('es-AR')} ARS.\n\n¿Tienen disponibilidad?`);
+      waBtn.href = `https://wa.me/5493415922559?text=${msg}`;
+    }
+  };
+
+  /* ============================================================
+     3. SISTEMA DE CUPONES
      ============================================================ */
   function getCouponsFromStorage() {
     const stored = localStorage.getItem('fbg_coupons');
@@ -134,6 +199,37 @@
 
     let pendingCoupon = null;
 
+    // --- VARIABLES ANTIBRUTEFORCE Y USO ÚNICO ---
+    let failedAttempts = 0;
+    let isLockedOut = false;
+    let lockoutInterval = null;
+
+    function getUsedCoupons() {
+      return JSON.parse(localStorage.getItem('fbg_used_coupons') || '[]');
+    }
+
+    function markCouponAsUsed(code) {
+      const used = getUsedCoupons();
+      if (!used.includes(code)) {
+        used.push(code);
+        localStorage.setItem('fbg_used_coupons', JSON.stringify(used));
+      }
+    }
+
+    // Listener para detectar si el usuario cambia el código después de validar
+    input && input.addEventListener('input', () => {
+      const currentInput = (input.value || '').trim().toUpperCase();
+      // Si ya había un cupón validado y el usuario cambia el texto, reseteamos todo
+      if (pendingCoupon && pendingCoupon.code !== currentInput) {
+        pendingCoupon = null;
+        successAlert?.classList.add('hidden');
+        errorAlert?.classList.add('hidden');
+        resetApplyBtn();
+      }
+    });
+
+    // --------------------------------------------
+
     function openModal() {
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
@@ -158,6 +254,8 @@
     }
 
     function validateCoupon() {
+      if (isLockedOut) return; // Si está bloqueado, no hace nada
+
       const rawCode = (input?.value || '').trim().toUpperCase();
       
       if (!rawCode) {
@@ -170,8 +268,20 @@
 
       const availableCoupons = getCouponsFromStorage();
       let couponData = availableCoupons[rawCode];
+      const usedCoupons = getUsedCoupons();
+
+      // Validamos si ya lo usó (1 Canje por dispositivo)
+      if (usedCoupons.includes(rawCode)) {
+        pendingCoupon = null;
+        errorAlert?.classList.remove('hidden');
+        successAlert?.classList.add('hidden');
+        resetApplyBtn();
+        window.showGlobalToast('Este cupón ya fue utilizado en este dispositivo.', true);
+        return;
+      }
 
       if (couponData) {
+        failedAttempts = 0; // Reseteamos contador de error
         pendingCoupon = couponData;
         const isPercent = couponData.type === 'PERCENT';
         const val = couponData.value;
@@ -193,14 +303,52 @@
         errorAlert?.classList.remove('hidden');
         successAlert?.classList.add('hidden');
         resetApplyBtn();
-        window.showGlobalToast('Cupón inválido o no existente', true);
+        
+        // Lógica Anti-Bruteforce
+        failedAttempts++;
+        if (failedAttempts >= 5) {
+          triggerLockout();
+        } else {
+          window.showGlobalToast(`Cupón inválido. Intento ${failedAttempts}/5`, true);
+        }
       }
     }
 
+    function triggerLockout() {
+      isLockedOut = true;
+      let timeLeft = 60;
+      if (input) input.disabled = true;
+      if (applyBtn) applyBtn.disabled = true;
+      const lockMsg = document.getElementById('coupon-lockout-msg');
+      const timerSpan = document.getElementById('lockout-timer');
+      
+      if (lockMsg) lockMsg.classList.remove('hidden');
+      if (timerSpan) timerSpan.innerText = timeLeft;
+
+      lockoutInterval = setInterval(() => {
+        timeLeft--;
+        if (timerSpan) timerSpan.innerText = timeLeft;
+        
+        if (timeLeft <= 0) {
+          clearInterval(lockoutInterval);
+          isLockedOut = false;
+          failedAttempts = 0;
+          if (input) input.disabled = false;
+          if (applyBtn) applyBtn.disabled = false;
+          if (lockMsg) lockMsg.classList.add('hidden');
+          window.showGlobalToast('Bloqueo finalizado. Ya puedes intentar de nuevo.', false);
+        }
+      }, 1000);
+    }
+
     function applyCoupon() {
-      if (!pendingCoupon) {
+      // Si no hay cupón validado todavía, validamos y cortamos la ejecución.
+      // Si el texto en el input cambió, también forzamos validación.
+      const currentInput = (input?.value || '').trim().toUpperCase();
+      
+      if (!pendingCoupon || pendingCoupon.code !== currentInput) {
         validateCoupon();
-        return;
+        return; 
       }
 
       const rawCode = pendingCoupon.code;
@@ -242,8 +390,11 @@
         localStorage.setItem('fbg_coupon_logs', JSON.stringify(logs));
       }
 
-      // 2. Aplicar visualmente
+      // 2. Marcar como usado y aplicar visualmente
+      markCouponAsUsed(rawCode);
+      currentGlobalDiscount = pendingCoupon; 
       updateAllPrices(pendingCoupon);
+      window.updateSimulatorUI();
       closeModal();
     }
 
@@ -263,7 +414,9 @@
       }
       
       resetApplyBtn();
+      currentGlobalDiscount = null; // <-- Limpiamos el cupón global
       updateAllPrices({ type: 'PERCENT', value: 0 });
+      window.updateSimulatorUI();
     }
 
     function updateAllPrices(discountData) {
@@ -338,7 +491,10 @@
 
     openBtns.forEach((btn) => btn && btn.addEventListener('click', openModal));
     applyBtn && applyBtn.addEventListener('click', applyCoupon);
-    input && input.addEventListener('input', validateCoupon);
+    
+    // ELIMINAMOS el evento 'input' para que no valide mientras escribe
+    // input && input.addEventListener('input', validateCoupon); 
+    
     $$('[data-close-coupon]').forEach((btn) => btn.addEventListener('click', closeModal));
     
     $$('[data-coupon]').forEach((btn) => btn.addEventListener('click', () => {
@@ -375,7 +531,7 @@
   }
 
   /* ============================================================
-     3. CANVAS DE PARTÍCULAS
+     4. CANVAS DE PARTÍCULAS
      ============================================================ */
   function initParticles() {
     const canvas = document.getElementById('hero-particles');
@@ -479,6 +635,11 @@
     initMobileMenu();
     initCouponSystem();
     initParticles();
+    
+    // Inicializar el simulador al cargar la página
+    if (document.getElementById('sim-service-select')) {
+      window.updateSimulatorUI();
+    }
   }
 
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }

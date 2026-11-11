@@ -250,13 +250,43 @@ function renderLiveFeed() {
 function updateKPIs() {
   const coupons = getStoredCoupons();
   
+  // KPI 1: Cupones Activos
   const activeCount = coupons.filter(c => c.status === 'ACTIVO' && (c.uses || 0) < (c.limit || 50)).length;
   const kpi1 = document.querySelector('.grid .hud-corner:nth-child(1) span.text-white');
   if (kpi1) kpi1.innerText = activeCount.toString().padStart(2, '0');
 
+  // KPI 2: Canjes Totales
   const totalUses = coupons.reduce((sum, c) => sum + (c.uses || 0), 0);
   const kpi2 = document.querySelector('.grid .hud-corner:nth-child(2) span.text-white');
   if (kpi2) kpi2.innerText = totalUses;
+
+  // KPI 3 (La barra): Porcentaje de cupones % vs $
+  let percentCount = 0;
+  let fixedCount = 0;
+  
+  coupons.forEach(c => {
+    if (c.type === 'PERCENT') percentCount++;
+    if (c.type === 'FIXED') fixedCount++;
+  });
+
+  const total = percentCount + fixedCount;
+  if (total > 0) {
+    const pPercent = Math.round((percentCount / total) * 100);
+    const pFixed = Math.round((fixedCount / total) * 100);
+
+    // Buscamos los elementos de la barra en el HTML del admin
+    const barPercent = document.querySelector('.bg-primary.h-full');
+    const barFixed = document.querySelector('.bg-secondary.h-full');
+    
+    // Buscamos los textos de abajo de la barra
+    const textPercent = document.querySelector('.flex.justify-between.text-\\[11px\\].text-slate-400.mt-2 span:first-child');
+    const textFixed = document.querySelector('.flex.justify-between.text-\\[11px\\].text-slate-400.mt-2 span:last-child');
+
+    if (barPercent) barPercent.style.width = `${pPercent}%`;
+    if (barFixed) barFixed.style.width = `${pFixed}%`;
+    if (textPercent) textPercent.innerText = `${pPercent}% Descuento %`;
+    if (textFixed) textFixed.innerText = `${pFixed}% Fijo ARS`;
+  }
 }
 
 // 6. Modal y Formulario

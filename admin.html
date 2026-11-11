@@ -212,15 +212,35 @@
 </div>
 </div>
 <div class="rounded-2xl bg-[#090b14]/90 border border-primary/30 p-5 shadow-[0_0_25px_rgba(0,0,0,0.5)] flex flex-col gap-3 font-mono">
-<div class="flex items-center justify-between pb-2 border-b border-slate-800">
-<span class="text-xs text-slate-300 font-bold uppercase tracking-wider">// PROTOCOLO</span>
-<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold">OK_200</span>
-</div>
-<div class="flex flex-col gap-2 text-xs">
-<div class="p-2.5 rounded-xl bg-[#05060b] border border-slate-800/80 flex justify-between items-center">
-<span class="text-slate-400">Validación:</span><span class="text-primary font-bold">1 CANJE/NÚMERO</span>
-</div>
-</div>
+  <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+    <span class="text-xs text-slate-300 font-bold uppercase tracking-wider">// PROTOCOLO DE SEGURIDAD</span>
+    <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold">OK_200</span>
+  </div>
+  <div class="flex flex-col gap-2 text-xs">
+    <div class="p-2.5 rounded-xl bg-[#05060b] border border-slate-800/80 flex justify-between items-center">
+      <span class="text-slate-400">Validación WhatsApp:</span>
+      <span class="text-primary font-bold">1 CANJE/NÚMERO</span>
+    </div>
+    <div class="p-2.5 rounded-xl bg-[#05060b] border border-slate-800/80 flex justify-between items-center">
+      <span class="text-slate-400">Anti-Bruteforce:</span>
+      <span class="text-emerald-400 font-bold">ACTIVO (5 req/m)</span>
+    </div>
+    <div class="p-2.5 rounded-xl bg-[#05060b] border border-slate-800/80 flex justify-between items-center">
+      <span class="text-slate-400">Acumulación Cupones:</span>
+      <span class="text-secondary font-bold">NO ACUMULABLE</span>
+    </div>
+  </div>
+  <!-- Barra de estadísticas dinámica -->
+  <div class="pt-2">
+    <div class="w-full bg-[#05060b] h-2 rounded-full overflow-hidden flex border border-slate-800">
+      <div class="bg-primary h-full shadow-[0_0_8px_#00f0ff] transition-all duration-500" style="width: 72%;" title="Cupones Porcentuales"></div>
+      <div class="bg-secondary h-full shadow-[0_0_8px_#ff007f] transition-all duration-500" style="width: 28%;" title="Cupones Fijos"></div>
+    </div>
+    <div class="flex justify-between text-[11px] text-slate-400 mt-2">
+      <span>72% Descuento %</span>
+      <span>28% Fijo ARS</span>
+    </div>
+  </div>
 </div>
 </div>
 </div>
