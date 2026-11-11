@@ -9,10 +9,8 @@ body {
   overflow-x: hidden;
 }
 
-/* Prevenir overflow horizontal por glows grandes */
 html, body { max-width: 100%; }
 
-/* Breakpoint extra para pantallas muy chicas */
 @layer utilities {
   @media (min-width: 420px) {
     .xs\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
@@ -20,18 +18,12 @@ html, body { max-width: 100%; }
   }
 }
 
-/* ---- Animaciones ---- */
 @keyframes neonPulse {
-  0%, 100% {
-    box-shadow: 0 0 18px rgba(255, 0, 127, 0.4), 0 0 35px rgba(0, 240, 255, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 32px rgba(255, 0, 127, 0.75), 0 0 50px rgba(0, 240, 255, 0.4);
-  }
+  0%, 100% { box-shadow: 0 0 18px rgba(255, 0, 127, 0.4), 0 0 35px rgba(0, 240, 255, 0.2); }
+  50% { box-shadow: 0 0 32px rgba(255, 0, 127, 0.75), 0 0 50px rgba(0, 240, 255, 0.4); }
 }
 .neon-pulse-pink { animation: neonPulse 2.8s infinite ease-in-out; }
 
-/* ---- HUD corners ---- */
 .hud-corner { position: relative; }
 .hud-corner::before {
   content: ''; position: absolute; top: -1px; left: -1px;
@@ -44,7 +36,6 @@ html, body { max-width: 100%; }
   border-bottom: 2px solid #ff007f; border-right: 2px solid #ff007f;
 }
 
-/* ---- Cyber grid ---- */
 .cyber-grid {
   background-image:
     linear-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px),
@@ -52,7 +43,6 @@ html, body { max-width: 100%; }
   background-size: 40px 40px;
 }
 
-/* ---- Hero: título con gradiente ---- */
 .hero-title {
   font-family: "Space Grotesk", Outfit, sans-serif;
   letter-spacing: -0.025em;
@@ -77,7 +67,6 @@ html, body { max-width: 100%; }
   letter-spacing: 0.08em;
 }
 
-/* ---- Card Combo: overflow visible ---- */
 .card-overflow-visible { overflow: visible !important; }
 .combo-badge {
   left: 50%;
@@ -85,9 +74,6 @@ html, body { max-width: 100%; }
   top: -14px;
 }
 
-/* ============================================================
-   CYBER PLAN CARDS
-   ============================================================ */
 .cyber-plan-card {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.3s ease,
@@ -104,12 +90,10 @@ html, body { max-width: 100%; }
   transition: opacity 0.35s ease;
 }
 
-/* Card 1: Diagnóstico */
 .card-cyan-subtle:hover {
   transform: translateY(-8px);
   border-color: #00f0ff;
-  box-shadow: 0 15px 35px -5px rgba(0, 240, 255, 0.35),
-              0 0 25px rgba(0, 240, 255, 0.2);
+  box-shadow: 0 15px 35px -5px rgba(0, 240, 255, 0.35), 0 0 25px rgba(0, 240, 255, 0.2);
 }
 .card-cyan-subtle::after {
   background: radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.12) 0%, transparent 70%);
@@ -123,12 +107,10 @@ html, body { max-width: 100%; }
   transform: scale(1.02);
 }
 
-/* Card 2: Mantenimiento PC */
 .card-cyan-electric:hover {
   transform: translateY(-8px);
   border-color: #00f0ff;
-  box-shadow: 0 15px 35px -5px rgba(0, 240, 255, 0.45),
-              0 0 30px rgba(0, 240, 255, 0.25);
+  box-shadow: 0 15px 35px -5px rgba(0, 240, 255, 0.45), 0 0 30px rgba(0, 240, 255, 0.25);
 }
 .card-cyan-electric::after {
   background: radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.16) 0%, transparent 75%);
@@ -142,33 +124,25 @@ html, body { max-width: 100%; }
   transform: scale(1.02);
 }
 
-/* Card 3: Combo */
 .card-pink-combo:hover {
   transform: translateY(-8px);
   border-color: #ff007f;
-  box-shadow: 0 20px 45px -5px rgba(255, 0, 127, 0.55),
-              0 0 35px rgba(0, 240, 255, 0.35);
+  box-shadow: 0 20px 45px -5px rgba(255, 0, 127, 0.55), 0 0 35px rgba(0, 240, 255, 0.35);
 }
 .card-pink-combo::after {
-  background: radial-gradient(circle at 50% 0%,
-              rgba(255, 0, 127, 0.22) 0%,
-              rgba(0, 240, 255, 0.08) 60%,
-              transparent 80%);
+  background: radial-gradient(circle at 50% 0%, rgba(255, 0, 127, 0.22) 0%, rgba(0, 240, 255, 0.08) 60%, transparent 80%);
 }
 .card-pink-combo:hover::after { opacity: 1; }
 .card-pink-combo:hover .card-btn-action {
   filter: brightness(1.25);
-  box-shadow: 0 0 25px rgba(255, 0, 127, 0.75),
-              0 0 35px rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 25px rgba(255, 0, 127, 0.75), 0 0 35px rgba(0, 240, 255, 0.4);
   transform: scale(1.02);
 }
 
-/* Card 4: Armado Gamer */
 .card-gold-gamer:hover {
   transform: translateY(-8px);
   border-color: #eab308;
-  box-shadow: 0 15px 35px -5px rgba(255, 184, 0, 0.45),
-              0 0 25px rgba(255, 184, 0, 0.25);
+  box-shadow: 0 15px 35px -5px rgba(255, 184, 0, 0.45), 0 0 25px rgba(255, 184, 0, 0.25);
 }
 .card-gold-gamer::after {
   background: radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.16) 0%, transparent 75%);
@@ -182,15 +156,11 @@ html, body { max-width: 100%; }
   transform: scale(1.02);
 }
 
-/* Desactivar hover transform en touch devices (evita "stuck" state) */
 @media (hover: none) {
   .cyber-plan-card:hover { transform: none; }
   .cyber-plan-card:hover .card-btn-action { transform: none; }
 }
 
-/* ============================================================
-   TABLA DE PRECIOS
-   ============================================================ */
 .price-row {
   padding: 10px 12px;
   margin-inline: -12px;
@@ -207,14 +177,10 @@ html, body { max-width: 100%; }
   border-color: rgba(255, 0, 127, 0.4);
 }
 
-/* En mobile, permitir que el texto se envuelva sin romper el layout */
 @media (max-width: 480px) {
   .price-row { gap: 8px; padding: 10px 8px; margin-inline: -8px; }
 }
 
-/* ============================================================
-   CHIPS DE CUPÓN
-   ============================================================ */
 .coupon-chip {
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
@@ -224,61 +190,26 @@ html, body { max-width: 100%; }
   cursor: pointer;
   white-space: nowrap;
 }
-.chip-cyan {
-  background: rgba(0, 240, 255, 0.1);
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  color: #00f0ff;
-}
+.chip-cyan { background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); color: #00f0ff; }
 .chip-cyan:hover { background: rgba(0, 240, 255, 0.2); }
-.chip-purple {
-  background: rgba(168, 85, 247, 0.1);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  color: #c4b5fd;
-}
+.chip-purple { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); color: #c4b5fd; }
 .chip-purple:hover { background: rgba(168, 85, 247, 0.2); }
-.chip-pink {
-  background: rgba(255, 0, 127, 0.1);
-  border: 1px solid rgba(255, 0, 127, 0.3);
-  color: #ff007f;
-}
+.chip-pink { background: rgba(255, 0, 127, 0.1); border: 1px solid rgba(255, 0, 127, 0.3); color: #ff007f; }
 .chip-pink:hover { background: rgba(255, 0, 127, 0.2); }
 
-/* ============================================================
-   MOBILE MENU
-   ============================================================ */
-#mobile-menu {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-}
-#mobile-menu:not(.hidden) {
-  max-height: 500px;
-}
+#mobile-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+#mobile-menu:not(.hidden) { max-height: 500px; }
 
-/* ============================================================
-   SCROLLBAR
-   ============================================================ */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: #050609; }
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.25);
-  border-radius: 5px;
-}
+::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.25); border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.5); }
 
-/* ============================================================
-   FOCUS ACCESIBLE
-   ============================================================ */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible {
+a:focus-visible, button:focus-visible, input:focus-visible {
   outline: 2px solid #00f0ff;
   outline-offset: 2px;
 }
 
-/* ============================================================
-   REDUCED MOTION
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -288,28 +219,14 @@ input:focus-visible {
   }
 }
 
-/* ============================================================
-   AJUSTES FINOS MOBILE
-   ============================================================ */
 @media (max-width: 640px) {
-  /* Evitar overflow por glows grandes */
   #hero-section { overflow: hidden; }
-
-  /* Texto con mejor legibilidad */
   .hero-subtitle { font-size: 0.875rem; }
-
-  /* Modal más compacto */
   #coupon-modal > div { padding: 1.25rem; }
-
-  /* Botones de contacto full width */
   #contacto a { width: 100%; }
-
-  /* Tarifario: cards más compactas */
   .price-table { font-size: 0.75rem; }
 }
 
-/* Tablets */
 @media (min-width: 641px) and (max-width: 1023px) {
-  /* El navbar cambia a hamburguesa hasta lg (1024px) */
   .hero-title { letter-spacing: -0.02em; }
 }
