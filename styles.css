@@ -1,0 +1,244 @@
+/* ============================================================
+   FBG SERVICIO TÉCNICO - Estilos personalizados
+   ============================================================ */
+
+body {
+  background-color: #050609;
+  color: #e2e8f0;
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ---- Animaciones ---- */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(255, 0, 127, 0.4), 0 0 35px rgba(0, 240, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(255, 0, 127, 0.75), 0 0 50px rgba(0, 240, 255, 0.4);
+  }
+}
+.neon-pulse-pink { animation: neonPulse 2.8s infinite ease-in-out; }
+
+/* ---- HUD corners ---- */
+.hud-corner { position: relative; }
+.hud-corner::before {
+  content: ''; position: absolute; top: -1px; left: -1px;
+  width: 8px; height: 8px;
+  border-top: 2px solid #00f0ff; border-left: 2px solid #00f0ff;
+}
+.hud-corner::after {
+  content: ''; position: absolute; bottom: -1px; right: -1px;
+  width: 8px; height: 8px;
+  border-bottom: 2px solid #ff007f; border-right: 2px solid #ff007f;
+}
+
+/* ---- Cyber grid de fondo ---- */
+.cyber-grid {
+  background-image:
+    linear-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ---- Hero: título con gradiente ---- */
+.hero-title {
+  font-family: "Space Grotesk", Outfit, sans-serif;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+.hero-gradient-text {
+  background: linear-gradient(90deg, #00f0ff 0%, #00d2ff 40%, #ff2a85 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+  filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.45));
+}
+.hero-subtitle {
+  font-family: Inter, "Plus Jakarta Sans", sans-serif;
+  font-weight: 300;
+}
+.btn-tarifario-label {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* ---- Card Combo: overflow visible ---- */
+.card-overflow-visible { overflow: visible !important; }
+.combo-badge {
+  left: 50%;
+  transform: translateX(-50%);
+  top: -14px;
+}
+
+/* ============================================================
+   CYBER PLAN CARDS - Interactividad
+   ============================================================ */
+.cyber-plan-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.cyber-plan-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+/* Card 1: Diagnóstico (Cian suave) */
+.card-cyan-subtle:hover {
+  transform: translateY(-8px);
+  border-color: #00f0ff;
+  box-shadow: 0 15px 35px -5px rgba(0, 240, 255, 0.35),
+              0 0 25px rgba(0, 240, 255, 0.2);
+}
+.card-cyan-subtle::after {
+  background: radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.12) 0%, transparent 70%);
+}
+.card-cyan-subtle:hover::after { opacity: 1; }
+.card-cyan-subtle:hover .card-btn-action {
+  background-color: rgba(0, 240, 255, 0.15);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  transform: scale(1.02);
+}
+
+/* Card 2: Mantenimiento PC (Cian eléctrico) */
+.card-cyan-electric:hover {
+  transform: translateY(-8px);
+  border-color: #00f0ff;
+  box-shadow: 0 15px 35px -5px rgba(0, 240, 255, 0.45),
+              0 0 30px rgba(0, 240, 255, 0.25);
+}
+.card-cyan-electric::after {
+  background: radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.16) 0%, transparent 75%);
+}
+.card-cyan-electric:hover::after { opacity: 1; }
+.card-cyan-electric:hover .card-btn-action {
+  background-color: #00f0ff;
+  color: #050609;
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+  transform: scale(1.02);
+}
+
+/* Card 3: Combo (Fucsia/Recomendado) */
+.card-pink-combo:hover {
+  transform: translateY(-8px);
+  border-color: #ff007f;
+  box-shadow: 0 20px 45px -5px rgba(255, 0, 127, 0.55),
+              0 0 35px rgba(0, 240, 255, 0.35);
+}
+.card-pink-combo::after {
+  background: radial-gradient(circle at 50% 0%,
+              rgba(255, 0, 127, 0.22) 0%,
+              rgba(0, 240, 255, 0.08) 60%,
+              transparent 80%);
+}
+.card-pink-combo:hover::after { opacity: 1; }
+.card-pink-combo:hover .card-btn-action {
+  filter: brightness(1.25);
+  box-shadow: 0 0 25px rgba(255, 0, 127, 0.75),
+              0 0 35px rgba(0, 240, 255, 0.4);
+  transform: scale(1.02);
+}
+
+/* Card 4: Armado Gamer (Oro) */
+.card-gold-gamer:hover {
+  transform: translateY(-8px);
+  border-color: #eab308;
+  box-shadow: 0 15px 35px -5px rgba(255, 184, 0, 0.45),
+              0 0 25px rgba(255, 184, 0, 0.25);
+}
+.card-gold-gamer::after {
+  background: radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.16) 0%, transparent 75%);
+}
+.card-gold-gamer:hover::after { opacity: 1; }
+.card-gold-gamer:hover .card-btn-action {
+  background-color: #eab308;
+  color: #050609;
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.6);
+  transform: scale(1.02);
+}
+
+/* ============================================================
+   TABLA DE PRECIOS - filas interactivas
+   ============================================================ */
+.price-row {
+  padding: 12px;
+  margin-inline: -12px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+.price-row.py-2\.5 { padding-block: 10px; }
+.price-row:hover {
+  background-color: rgba(255, 0, 127, 0.1);
+  border-color: rgba(255, 0, 127, 0.4);
+}
+
+/* ============================================================
+   CHIPS DE CUPÓN (reemplazan los onclick inline)
+   ============================================================ */
+.coupon-chip {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.chip-cyan {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #00f0ff;
+}
+.chip-cyan:hover { background: rgba(0, 240, 255, 0.2); }
+.chip-purple {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #c4b5fd;
+}
+.chip-purple:hover { background: rgba(168, 85, 247, 0.2); }
+.chip-pink {
+  background: rgba(255, 0, 127, 0.1);
+  border: 1px solid rgba(255, 0, 127, 0.3);
+  color: #ff007f;
+}
+.chip-pink:hover { background: rgba(255, 0, 127, 0.2); }
+
+/* ============================================================
+   Focus visible accesible
+   ============================================================ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #00f0ff;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
