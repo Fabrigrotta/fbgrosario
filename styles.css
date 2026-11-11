@@ -1,5 +1,5 @@
 /* ============================================================
-   FBG SERVICIO TÉCNICO - Estilos personalizados
+   FBG SERVICIO TÉCNICO — Estilos personalizados
    ============================================================ */
 
 body {
@@ -7,6 +7,17 @@ body {
   color: #e2e8f0;
   font-family: 'Space Grotesk', sans-serif;
   overflow-x: hidden;
+}
+
+/* Prevenir overflow horizontal por glows grandes */
+html, body { max-width: 100%; }
+
+/* Breakpoint extra para pantallas muy chicas */
+@layer utilities {
+  @media (min-width: 420px) {
+    .xs\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .xs\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  }
 }
 
 /* ---- Animaciones ---- */
@@ -33,7 +44,7 @@ body {
   border-bottom: 2px solid #ff007f; border-right: 2px solid #ff007f;
 }
 
-/* ---- Cyber grid de fondo ---- */
+/* ---- Cyber grid ---- */
 .cyber-grid {
   background-image:
     linear-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px),
@@ -75,7 +86,7 @@ body {
 }
 
 /* ============================================================
-   CYBER PLAN CARDS - Interactividad
+   CYBER PLAN CARDS
    ============================================================ */
 .cyber-plan-card {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
@@ -93,7 +104,7 @@ body {
   transition: opacity 0.35s ease;
 }
 
-/* Card 1: Diagnóstico (Cian suave) */
+/* Card 1: Diagnóstico */
 .card-cyan-subtle:hover {
   transform: translateY(-8px);
   border-color: #00f0ff;
@@ -112,7 +123,7 @@ body {
   transform: scale(1.02);
 }
 
-/* Card 2: Mantenimiento PC (Cian eléctrico) */
+/* Card 2: Mantenimiento PC */
 .card-cyan-electric:hover {
   transform: translateY(-8px);
   border-color: #00f0ff;
@@ -131,7 +142,7 @@ body {
   transform: scale(1.02);
 }
 
-/* Card 3: Combo (Fucsia/Recomendado) */
+/* Card 3: Combo */
 .card-pink-combo:hover {
   transform: translateY(-8px);
   border-color: #ff007f;
@@ -152,7 +163,7 @@ body {
   transform: scale(1.02);
 }
 
-/* Card 4: Armado Gamer (Oro) */
+/* Card 4: Armado Gamer */
 .card-gold-gamer:hover {
   transform: translateY(-8px);
   border-color: #eab308;
@@ -171,36 +182,47 @@ body {
   transform: scale(1.02);
 }
 
+/* Desactivar hover transform en touch devices (evita "stuck" state) */
+@media (hover: none) {
+  .cyber-plan-card:hover { transform: none; }
+  .cyber-plan-card:hover .card-btn-action { transform: none; }
+}
+
 /* ============================================================
-   TABLA DE PRECIOS - filas interactivas
+   TABLA DE PRECIOS
    ============================================================ */
 .price-row {
-  padding: 12px;
+  padding: 10px 12px;
   margin-inline: -12px;
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   transition: all 0.3s ease;
   border: 1px solid transparent;
 }
-.price-row.py-2\.5 { padding-block: 10px; }
 .price-row:hover {
   background-color: rgba(255, 0, 127, 0.1);
   border-color: rgba(255, 0, 127, 0.4);
 }
 
+/* En mobile, permitir que el texto se envuelva sin romper el layout */
+@media (max-width: 480px) {
+  .price-row { gap: 8px; padding: 10px 8px; margin-inline: -8px; }
+}
+
 /* ============================================================
-   CHIPS DE CUPÓN (reemplazan los onclick inline)
+   CHIPS DE CUPÓN
    ============================================================ */
 .coupon-chip {
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 6px;
   transition: all 0.2s ease;
   cursor: pointer;
+  white-space: nowrap;
 }
 .chip-cyan {
   background: rgba(0, 240, 255, 0.1);
@@ -222,7 +244,30 @@ body {
 .chip-pink:hover { background: rgba(255, 0, 127, 0.2); }
 
 /* ============================================================
-   Focus visible accesible
+   MOBILE MENU
+   ============================================================ */
+#mobile-menu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+#mobile-menu:not(.hidden) {
+  max-height: 500px;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #050609; }
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.25);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.5); }
+
+/* ============================================================
+   FOCUS ACCESIBLE
    ============================================================ */
 a:focus-visible,
 button:focus-visible,
@@ -232,7 +277,7 @@ input:focus-visible {
 }
 
 /* ============================================================
-   Reduced motion
+   REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -241,4 +286,30 @@ input:focus-visible {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================================
+   AJUSTES FINOS MOBILE
+   ============================================================ */
+@media (max-width: 640px) {
+  /* Evitar overflow por glows grandes */
+  #hero-section { overflow: hidden; }
+
+  /* Texto con mejor legibilidad */
+  .hero-subtitle { font-size: 0.875rem; }
+
+  /* Modal más compacto */
+  #coupon-modal > div { padding: 1.25rem; }
+
+  /* Botones de contacto full width */
+  #contacto a { width: 100%; }
+
+  /* Tarifario: cards más compactas */
+  .price-table { font-size: 0.75rem; }
+}
+
+/* Tablets */
+@media (min-width: 641px) and (max-width: 1023px) {
+  /* El navbar cambia a hamburguesa hasta lg (1024px) */
+  .hero-title { letter-spacing: -0.02em; }
 }

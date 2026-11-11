@@ -1,218 +1,262 @@
 /* ============================================================
-   FBG SERVICIO TÉCNICO - Lógica de cupones + partículas
+   FBG SERVICIO TÉCNICO
+   - Sistema de cupones con recálculo de precios
+   - Canvas de partículas interactivo del hero
+   - Menú mobile hamburguesa
    ============================================================ */
 
 (function () {
   'use strict';
 
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => root.querySelectorAll(sel);
+
   /* ============================================================
-     1. SISTEMA DE CUPONES
+     1. MENÚ MOBILE
+     ============================================================ */
+  function initMobileMenu() {
+    const toggle = $('#mobile-menu-toggle');
+    const menu = $('#mobile-menu');
+    const icon = $('#mobile-menu-icon');
+    if (!toggle || !menu) return;
+
+    function setOpen(open) {
+      toggle.setAttribute('aria-expanded', String(open));
+      if (open) {
+        menu.classList.remove('hidden');
+        if (icon) icon.textContent = 'close';
+      } else {
+        menu.classList.add('hidden');
+        if (icon) icon.textContent = 'menu';
+      }
+    }
+
+    toggle.addEventListener('click', () => {
+      const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+      setOpen(!isOpen);
+    });
+
+    // Cerrar al clickear un link del menú
+    $$('.mobile-nav-link', menu).forEach((link) => {
+      link.addEventListener('click', () => setOpen(false));
+    });
+
+    // Cerrar al redimensionar a desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) setOpen(false);
+    });
+  }
+
+  /* ============================================================
+     2. SISTEMA DE CUPONES
      ============================================================ */
   const availableCoupons = {
-    'FBG10': 10,
-    'PROMO10': 10,
-    'FBG15': 15,
-    'PROMO15': 15,
-    'FBG20': 20,
-    'CYBER20': 20,
-    'PROMO20': 20,
-    'CYBERTECH': 25,
-    'FBG25': 25
+    FBG10: 10,
+    PROMO10: 10,
+    FBG15: 15,
+    PROMO15: 15,
+    FBG20: 20,
+    CYBER20: 20,
+    PROMO20: 20,
+    CYBERTECH: 25,
+    FBG25: 25
   };
 
   let activeDiscountPercent = 0;
   let activeCouponCode = '';
 
-  const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => document.querySelectorAll(sel);
-
-  const modal = $('#coupon-modal');
-  const input = $('#coupon-input');
-  const openBtn = $('#open-coupon-btn');
-  const applyBtn = $('#apply-coupon-btn');
-  const btnText = $('#coupon-btn-text');
-  const successAlert = $('#coupon-alert-success');
-  const errorAlert = $('#coupon-alert-error');
-  const successMsg = $('#coupon-success-msg');
-  const navBtn = openBtn;
-
-  // ---- Helpers de formato ----
   const formatARS = (n) => '$ ' + n.toLocaleString('es-AR');
   const formatARSTable = (n) => '$' + n.toLocaleString('es-AR');
 
-  // ---- Abrir / Cerrar modal ----
-  function openCouponModal() {
+  function initCouponSystem() {
+    const modal = $('#coupon-modal');
+    const input = $('#coupon-input');
+    const openBtns = [$('#open-coupon-btn'), $('#open-coupon-btn-mobile')];
+    const applyBtn = $('#apply-coupon-btn');
+    const btnTexts = [$('#coupon-btn-text'), $('#coupon-btn-text-mobile')];
+    const successAlert = $('#coupon-alert-success');
+    const errorAlert = $('#coupon-alert-error');
+    const successMsg = $('#coupon-success-msg');
+    const navBtn = $('#open-coupon-btn');
+
     if (!modal) return;
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => input && input.focus(), 60);
-  }
 
-  function closeCouponModal() {
-    if (!modal) return;
-    modal.classList.add('hidden');
-    errorAlert && errorAlert.classList.add('hidden');
-    document.body.style.overflow = '';
-  }
-
-  // ---- Aplicar cupón ----
-  function applyCoupon() {
-    const rawCode = (input?.value || '').trim().toUpperCase();
-
-    if (!rawCode) {
-      errorAlert?.classList.remove('hidden');
-      successAlert?.classList.add('hidden');
-      return;
+    /* --- Abrir / Cerrar --- */
+    function openModal() {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => input && input.focus(), 60);
     }
 
-    let discount = 0;
-    if (availableCoupons[rawCode]) {
-      discount = availableCoupons[rawCode];
-    } else {
-      const matches = rawCode.match(/\d+/);
-      if (matches) {
-        discount = Math.min(Math.max(parseInt(matches[0], 10), 5), 50);
+    function closeModal() {
+      modal.classList.add('hidden');
+      errorAlert && errorAlert.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    /* --- Aplicar --- */
+    function applyCoupon() {
+      const rawCode = (input?.value || '').trim().toUpperCase();
+
+      if (!rawCode) {
+        errorAlert?.classList.remove('hidden');
+        successAlert?.classList.add('hidden');
+        return;
+      }
+
+      let discount = 0;
+      if (availableCoupons[rawCode]) {
+        discount = availableCoupons[rawCode];
+      } else {
+        const matches = rawCode.match(/\d+/);
+        if (matches) {
+          discount = Math.min(Math.max(parseInt(matches[0], 10), 5), 50);
+        }
+      }
+
+      if (discount > 0) {
+        activeDiscountPercent = discount;
+        activeCouponCode = rawCode;
+
+        errorAlert?.classList.add('hidden');
+        successAlert?.classList.remove('hidden');
+        if (successMsg) {
+          successMsg.innerText = `¡CUPÓN ${activeCouponCode} ACTIVADO! ${discount}% OFF aplicado en todos los valores.`;
+        }
+
+        btnTexts.forEach((el) => {
+          if (el) el.innerText = `Cupón: ${discount}% OFF`;
+        });
+
+        if (navBtn) {
+          navBtn.classList.remove('from-secondary', 'to-primary');
+          navBtn.classList.add('from-emerald-500', 'via-teal-600', 'to-primary', 'border-emerald-400');
+        }
+
+        updateAllPrices(discount);
+      } else {
+        errorAlert?.classList.remove('hidden');
+        successAlert?.classList.add('hidden');
       }
     }
 
-    if (discount > 0) {
-      activeDiscountPercent = discount;
-      activeCouponCode = rawCode;
-
+    /* --- Quitar --- */
+    function removeCoupon() {
+      activeDiscountPercent = 0;
+      activeCouponCode = '';
+      if (input) input.value = '';
+      successAlert?.classList.add('hidden');
       errorAlert?.classList.add('hidden');
-      successAlert?.classList.remove('hidden');
-      if (successMsg) {
-        successMsg.innerText = `¡CUPÓN ${activeCouponCode} ACTIVADO! ${discount}% OFF aplicado en todos los valores.`;
-      }
 
-      if (btnText) btnText.innerText = `Cupón: ${discount}% OFF Activo`;
+      btnTexts.forEach((el) => {
+        if (el) el.innerText = 'Canjear Cupón';
+      });
+
       if (navBtn) {
-        navBtn.classList.remove('from-secondary', 'to-primary');
-        navBtn.classList.add('from-emerald-500', 'via-teal-600', 'to-primary', 'border-emerald-400');
+        navBtn.classList.remove('from-emerald-500', 'via-teal-600', 'border-emerald-400');
+        navBtn.classList.add('from-secondary', 'to-primary');
       }
 
-      updateAllPrices(discount);
-    } else {
-      errorAlert?.classList.remove('hidden');
-      successAlert?.classList.add('hidden');
-    }
-  }
-
-  // ---- Quitar cupón ----
-  function removeCoupon() {
-    activeDiscountPercent = 0;
-    activeCouponCode = '';
-    if (input) input.value = '';
-    successAlert?.classList.add('hidden');
-    errorAlert?.classList.add('hidden');
-
-    if (btnText) btnText.innerText = 'Canjear Cupón';
-    if (navBtn) {
-      navBtn.classList.remove('from-emerald-500', 'via-teal-600', 'border-emerald-400');
-      navBtn.classList.add('from-secondary', 'to-primary');
+      updateAllPrices(0);
     }
 
-    updateAllPrices(0);
-  }
+    /* --- Recalcular precios --- */
+    function updateAllPrices(discountPercent) {
+      // Cards de planes
+      $$('[data-price-container]').forEach((container) => {
+        const basePrice = parseInt(container.getAttribute('data-price-container'), 10);
 
-  // ---- Recalcular precios en pantalla ----
-  function updateAllPrices(discountPercent) {
-    // 1) Cards de planes
-    $$('[data-price-container]').forEach((container) => {
-      const basePrice = parseInt(container.getAttribute('data-price-container'), 10);
+        if (discountPercent > 0) {
+          const discounted = Math.round(basePrice * (1 - discountPercent / 100));
+          container.innerHTML = `
+            <div class="flex flex-col">
+              <span class="text-xs line-through text-slate-500 font-mono">${formatARS(basePrice)}</span>
+              <div class="flex items-baseline gap-1.5 flex-wrap">
+                <span class="text-2xl sm:text-3xl font-bold font-mono text-[#00f0ff] drop-shadow-[0_0_12px_rgba(0,240,255,0.6)]">${formatARS(discounted)}</span>
+                <span class="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-secondary/20 text-secondary border border-secondary/40">-${discountPercent}%</span>
+                <span class="text-xs text-primary font-mono">ARS</span>
+              </div>
+            </div>`;
+        } else {
+          container.innerHTML = `
+            <span class="text-2xl sm:text-3xl text-white font-bold font-mono price-display" data-base="${basePrice}">${formatARS(basePrice)}</span>
+            <span class="text-xs text-primary font-mono currency-tag">ARS</span>`;
+        }
+      });
 
-      if (discountPercent > 0) {
-        const discounted = Math.round(basePrice * (1 - discountPercent / 100));
-        container.innerHTML = `
-          <div class="flex flex-col">
-            <span class="text-xs line-through text-slate-500 font-mono">${formatARS(basePrice)}</span>
-            <div class="flex items-baseline gap-1.5">
-              <span class="text-3xl font-bold font-mono text-[#00f0ff] drop-shadow-[0_0_12px_rgba(0,240,255,0.6)]">${formatARS(discounted)}</span>
-              <span class="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-secondary/20 text-secondary border border-secondary/40">-${discountPercent}%</span>
-              <span class="text-xs text-primary font-mono">ARS</span>
-            </div>
-          </div>`;
-      } else {
-        container.innerHTML = `
-          <span class="text-3xl text-white font-bold font-mono price-display" data-base="${basePrice}">${formatARS(basePrice)}</span>
-          <span class="text-xs text-primary font-mono currency-tag">ARS</span>`;
+      // Tabla tarifaria
+      $$('.price-table').forEach((span) => {
+        const basePrice = parseInt(span.getAttribute('data-base'), 10);
+        const parent = span.parentElement;
+
+        if (discountPercent > 0) {
+          const discounted = Math.round(basePrice * (1 - discountPercent / 100));
+          parent.innerHTML = `
+            <div class="flex items-center gap-1.5 flex-wrap justify-end">
+              <span class="text-xs line-through text-slate-500 font-mono">${formatARSTable(basePrice)}</span>
+              <span class="font-mono font-bold text-[#00f0ff] drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] whitespace-nowrap">${formatARSTable(discounted)}</span>
+              <span class="text-[10px] font-bold font-mono px-1 py-0.5 rounded bg-secondary/20 text-secondary border border-secondary/40">-${discountPercent}%</span>
+            </div>`;
+        } else {
+          parent.innerHTML = `
+            <span class="font-mono font-bold text-white group-hover:text-secondary transition-colors price-table whitespace-nowrap" data-base="${basePrice}">${formatARSTable(basePrice)}</span>`;
+        }
+      });
+    }
+
+    /* --- Listeners --- */
+    openBtns.forEach((btn) => btn && btn.addEventListener('click', openModal));
+    applyBtn && applyBtn.addEventListener('click', applyCoupon);
+
+    $$('[data-close-coupon]').forEach((btn) =>
+      btn.addEventListener('click', closeModal)
+    );
+
+    $$('[data-coupon]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        const code = btn.getAttribute('data-coupon');
+        if (input) input.value = code;
+        applyCoupon();
+      })
+    );
+
+    $$('[data-remove-coupon]').forEach((btn) =>
+      btn.addEventListener('click', removeCoupon)
+    );
+
+    input && input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyCoupon();
       }
     });
 
-    // 2) Tabla de tarifario
-    $$('.price-table').forEach((span) => {
-      const basePrice = parseInt(span.getAttribute('data-base'), 10);
-      const parent = span.parentElement;
-
-      if (discountPercent > 0) {
-        const discounted = Math.round(basePrice * (1 - discountPercent / 100));
-        parent.innerHTML = `
-          <div class="flex items-center gap-2">
-            <span class="text-xs line-through text-slate-500 font-mono">${formatARSTable(basePrice)}</span>
-            <span class="font-mono font-bold text-[#00f0ff] drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]">${formatARSTable(discounted)}</span>
-            <span class="text-[10px] font-bold font-mono px-1 py-0.5 rounded bg-secondary/20 text-secondary border border-secondary/40">-${discountPercent}%</span>
-          </div>`;
-      } else {
-        parent.innerHTML = `
-          <span class="font-mono font-bold text-white group-hover:text-secondary transition-colors price-table" data-base="${basePrice}">${formatARSTable(basePrice)}</span>`;
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeModal();
       }
     });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
   }
-
-  // ---- Listeners de cupones ----
-  openBtn?.addEventListener('click', openCouponModal);
-  applyBtn?.addEventListener('click', applyCoupon);
-
-  $$('[data-close-coupon]').forEach((btn) =>
-    btn.addEventListener('click', closeCouponModal)
-  );
-
-  $$('[data-coupon]').forEach((btn) =>
-    btn.addEventListener('click', () => {
-      const code = btn.getAttribute('data-coupon');
-      if (input) input.value = code;
-      applyCoupon();
-    })
-  );
-
-  $$('[data-remove-coupon]').forEach((btn) =>
-    btn.addEventListener('click', removeCoupon)
-  );
-
-  // Enter en el input
-  input?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      applyCoupon();
-    }
-  });
-
-  // Escape + click fuera
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
-      closeCouponModal();
-    }
-  });
-
-  modal?.addEventListener('click', (e) => {
-    if (e.target === modal) closeCouponModal();
-  });
 
   /* ============================================================
-     2. CANVAS DE PARTÍCULAS DEL HERO
+     3. CANVAS DE PARTÍCULAS
      ============================================================ */
   function initParticles() {
     const canvas = document.getElementById('hero-particles');
     const section = document.getElementById('hero-section');
     if (!canvas || !section) return;
 
-    // Respetar preferencia de movimiento reducido
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const ctx = canvas.getContext('2d');
     let width = 0;
     let height = 0;
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let animationId = null;
 
     const mouse = { x: -9999, y: -9999, radius: 190 };
 
@@ -225,7 +269,9 @@
       { color: 'rgba(192, 132, 252, ', glow: '#c084fc' }
     ];
 
-    const PARTICLE_COUNT = 140;
+    // Menos partículas en mobile para rendimiento
+    const isMobile = window.innerWidth < 768;
+    const PARTICLE_COUNT = isMobile ? 70 : 140;
     const particles = [];
 
     function updateDimensions() {
@@ -305,15 +351,25 @@
         particles[i].update();
         particles[i].draw();
       }
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
     }
 
-    // Init
-    updateDimensions();
-    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+    function start() {
+      updateDimensions();
+      particles.length = 0;
+      for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+      if (animationId) cancelAnimationFrame(animationId);
+      animate();
+    }
 
-    // Listeners
-    window.addEventListener('resize', updateDimensions);
+    function onResize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      updateDimensions();
+    }
+
+    start();
+
+    window.addEventListener('resize', onResize);
 
     section.addEventListener('mousemove', (e) => {
       const rect = section.getBoundingClientRect();
@@ -326,7 +382,6 @@
       mouse.y = -9999;
     });
 
-    // Touch support opcional
     section.addEventListener('touchmove', (e) => {
       const rect = section.getBoundingClientRect();
       const t = e.touches[0];
@@ -334,14 +389,25 @@
       mouse.y = t.clientY - rect.top;
     }, { passive: true });
 
-    requestAnimationFrame(animate);
+    section.addEventListener('touchend', () => {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    });
   }
 
-  // Arrancar cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initParticles);
-  } else {
+  /* ============================================================
+     INIT
+     ============================================================ */
+  function init() {
+    initMobileMenu();
+    initCouponSystem();
     initParticles();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 
 })();
