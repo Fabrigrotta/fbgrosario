@@ -2,6 +2,67 @@
    ADMIN.JS - Lógica del Panel de Administración de Cupones
    ============================================================ */
 
+/* ============================================================
+   SEGURIDAD Y LOGIN
+   ============================================================ */
+// Credenciales (Podés cambiarlas acá)
+const AUTH_USER = "fabri.grotta";
+const AUTH_PASS = "FBG.rosario2026";
+
+// Verificar sesión al cargar la página
+function checkAuth() {
+  const isLogged = sessionStorage.getItem('fbg_admin_logged');
+  const loginScreen = document.getElementById('login-screen');
+  const mainApp = document.querySelector('main');
+  const headerApp = document.querySelector('header');
+
+  if (isLogged === 'true') {
+    if (loginScreen) loginScreen.classList.add('hidden');
+    if (mainApp) mainApp.style.display = '';
+    if (headerApp) headerApp.style.display = '';
+  } else {
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    if (mainApp) mainApp.style.display = 'none';
+    if (headerApp) headerApp.style.display = 'none';
+  }
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errorDiv = document.getElementById('login-error');
+
+  if (user === AUTH_USER && pass === AUTH_PASS) {
+    sessionStorage.setItem('fbg_admin_logged', 'true');
+    errorDiv.classList.add('hidden');
+    checkAuth(); // Muestra la app
+    renderTable(); // Carga los datos
+  } else {
+    errorDiv.classList.remove('hidden');
+    document.getElementById('login-pass').value = ''; // Limpia la contraseña
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function handleLogout() {
+  // 1. Borramos el token de sesión
+  sessionStorage.removeItem('fbg_admin_logged');
+  
+  // 2. Mostramos un aviso rápido (opcional, si querés que se vea el Toast antes de salir)
+  if (window.showGlobalToast) {
+    window.showGlobalToast('Sesión finalizada. Redirigiendo...', false);
+  }
+  
+  // 3. Redirigimos al inicio después de un breve delay para que se lea el mensaje
+  setTimeout(() => {
+    window.location.href = 'index.html';
+  }, 800);
+}
+
+// Ejecutar la verificación ni bien carga el DOM
+document.addEventListener('DOMContentLoaded', checkAuth);
+
 let currentDiscountType = 'PERCENT';
 let editingCouponId = null;
 
