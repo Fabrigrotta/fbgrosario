@@ -27,7 +27,7 @@ function saveCoupons(coupons) {
   localStorage.setItem('fbg_coupons', JSON.stringify(coupons));
 }
 
-// 2. Renderizar la tabla
+// 2. Renderizar la tabla compacta
 function renderTable() {
   const coupons = getStoredCoupons();
   const tbody = document.getElementById('couponsBody');
@@ -57,55 +57,55 @@ function renderTable() {
     tr.setAttribute('data-status', isExpired ? 'EXPIRADO' : c.status);
 
     tr.innerHTML = `
-      <td class="py-4 px-4">
-        <div class="flex items-center gap-2">
-          <span class="px-2.5 py-1 rounded bg-[#05060b] border ${borderColor} font-bold shadow-[0_0_10px_rgba(0,240,255,0.25)] ${isExpired ? 'line-through text-slate-500 border-slate-700' : ''}">${c.code}</span>
-          <button onclick="copyCode('${c.code}')" title="Copiar Enlace Directo" class="text-slate-500 hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[17px]">link</span>
+      <td class="py-3 px-2 sm:px-3">
+        <div class="flex items-center gap-1.5">
+          <span class="px-2 py-1 rounded bg-[#05060b] border ${borderColor} font-bold shadow-[0_0_10px_rgba(0,240,255,0.25)] ${isExpired ? 'line-through text-slate-500 border-slate-700' : ''} text-xs">${c.code}</span>
+          <button onclick="copyCode('${c.code}')" title="Copiar Enlace" class="text-slate-500 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[15px]">link</span>
           </button>
         </div>
         <span class="text-[10px] text-slate-500 block mt-0.5">#${c.id}</span>
       </td>
-      <td class="py-4 px-4">
-        <span class="px-2.5 py-1 rounded-full ${isExpired ? 'bg-slate-800 border-slate-700 text-slate-400' : bgBadge} font-bold shadow-[0_0_12px_rgba(255,0,127,0.3)]">${discountStr}</span>
+      <td class="py-3 px-2 sm:px-3">
+        <span class="px-2 py-1 rounded-full ${isExpired ? 'bg-slate-800 border-slate-700 text-slate-400' : bgBadge} font-bold shadow-[0_0_12px_rgba(255,0,127,0.3)] text-xs">${discountStr}</span>
       </td>
-      <td class="py-4 px-4">
-        <div class="flex flex-col gap-1 max-w-[170px]">
-          <span class="px-2 py-0.5 rounded ${isExpired ? 'bg-slate-900 text-slate-400' : 'bg-primary/10 border border-primary/30 text-primary'} truncate">Todos</span>
+      <td class="py-3 px-2 sm:px-3">
+        <div class="flex flex-col gap-1 max-w-[80px]">
+          <span class="px-2 py-0.5 rounded text-[11px] ${isExpired ? 'bg-slate-900 text-slate-400' : 'bg-primary/10 border border-primary/30 text-primary'} truncate">Todos</span>
         </div>
       </td>
-      <td class="py-4 px-4">
-        <div class="flex flex-col gap-1 min-w-[100px]">
-          <span class="${isExpired ? 'text-rose-400' : 'text-primary'} font-bold text-xs font-mono">${dateFormatted}</span>
+      <td class="py-3 px-2 sm:px-3">
+        <div class="flex flex-col gap-1 min-w-[80px]">
+          <span class="${isExpired ? 'text-rose-400' : 'text-primary'} font-bold text-[11px] font-mono">${dateFormatted}</span>
         </div>
       </td>
-      <td class="py-4 px-4">
-        <div class="flex flex-col gap-1 min-w-[110px]">
-          <span class="text-white font-bold">${uses} / ${limit}</span>
+      <td class="py-3 px-2 sm:px-3">
+        <div class="flex flex-col gap-1 min-w-[80px]">
+          <span class="text-white font-bold text-[11px]">${uses} / ${limit}</span>
           <div class="w-full bg-[#05060b] h-1.5 rounded-full overflow-hidden border border-slate-800">
             <div class="${isExpired ? 'bg-rose-500' : 'bg-secondary'}" style="width: ${percent}%; height: 100%;"></div>
           </div>
-          ${uses >= limit ? `<span class="text-[10px] text-rose-400 font-bold mt-0.5">100% agotado</span>` : `<span class="text-[10px] text-secondary">${percent}% cupo</span>`}
+          <span class="text-[9px] ${isExpired ? 'text-rose-400' : 'text-secondary'} font-bold mt-0.5">${percent}% cupo</span>
         </div>
       </td>
-      <td class="py-4 px-4">
+      <td class="py-3 px-2 sm:px-3">
         ${isExpired ? `
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/40 text-rose-400">
+          <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-rose-500/10 border border-rose-500/40 text-rose-400 text-[10px]">
             <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span><span class="font-bold">AGOTADO</span>
           </div>
         ` : `
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-400">
+          <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 text-[10px]">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span class="font-bold">ACTIVO</span>
           </div>
         `}
       </td>
-      <td class="py-4 px-4 text-right">
-        <div class="flex items-center justify-end gap-1.5">
-          <button onclick="editCoupon('${c.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors" title="Editar">
-            <span class="material-symbols-outlined text-lg">edit</span>
+      <td class="py-3 px-2 sm:px-3 text-right">
+        <div class="flex items-center justify-end gap-1">
+          <button onclick="editCoupon('${c.id}')" class="p-1 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors" title="Editar">
+            <span class="material-symbols-outlined text-[16px]">edit</span>
           </button>
-          <button onclick="deleteCouponRow('${c.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors" title="Eliminar Cupón">
-            <span class="material-symbols-outlined text-lg">delete_forever</span>
+          <button onclick="deleteCouponRow('${c.id}')" class="p-1 rounded-lg text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors" title="Eliminar">
+            <span class="material-symbols-outlined text-[16px]">delete_forever</span>
           </button>
         </div>
       </td>
@@ -130,7 +130,6 @@ function renderLiveFeed() {
   }
 
   feed.innerHTML = logs.slice(0, 5).map((log, index) => {
-    // Colores alternados para simular distintos clientes
     const color = index % 2 === 0 ? 'text-primary' : 'text-secondary';
     const bgColor = index % 2 === 0 ? 'hover:border-primary/40' : 'hover:border-secondary/40';
     

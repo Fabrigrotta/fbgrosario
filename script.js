@@ -118,15 +118,9 @@
       }
 
       const availableCoupons = getCouponsFromStorage();
-      let couponData = availableCoupons[rawCode];
+      let couponData = availableCoupons[rawCode]; // Solo busca si existe de verdad
 
-      if (!couponData) {
-        const matches = rawCode.match(/\d+/);
-        if (matches) {
-          const num = Math.min(Math.max(parseInt(matches[0], 10), 5), 50);
-          couponData = { code: rawCode, type: 'PERCENT', value: num };
-        }
-      }
+      // ELIMINAMOS EL FALLBACK QUE INVENTABA CUPONES
 
       if (couponData) {
         pendingCoupon = couponData;
@@ -303,11 +297,15 @@
 
     $$('[data-close-coupon]').forEach((btn) => btn.addEventListener('click', closeModal));
     
-    // Al tocar un chip, setea el valor y ejecuta validateCoupon()
+    // Al tocar un chip, solo setea el valor en el input (no valida solo)
     $$('[data-coupon]').forEach((btn) => btn.addEventListener('click', () => {
       if (input) {
         input.value = btn.getAttribute('data-coupon');
-        validateCoupon();
+        // Quitamos el cartel de error anterior y ponemos foco en el input
+        errorAlert?.classList.add('hidden');
+        successAlert?.classList.add('hidden');
+        pendingCoupon = null;
+        resetApplyBtn();
       }
     }));
     
