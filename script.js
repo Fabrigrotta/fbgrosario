@@ -1,8 +1,8 @@
 /* ============================================================
    FBG SERVICIO TÉCNICO
+   - Menú mobile hamburguesa
    - Sistema de cupones con recálculo de precios
    - Canvas de partículas interactivo del hero
-   - Menú mobile hamburguesa
    ============================================================ */
 
 (function () {
@@ -165,6 +165,11 @@
       // Cards de planes
       $$('[data-price-container]').forEach((container) => {
         const basePrice = parseInt(container.getAttribute('data-price-container'), 10);
+        
+        // Guardamos el enlace del botón antes de reescribir el contenedor del precio
+        const card = container.closest('.cyber-plan-card');
+        const btn = card ? card.querySelector('.card-btn-action') : null;
+        const originalHref = btn ? btn.getAttribute('href') : null;
 
         if (discountPercent > 0) {
           const discounted = Math.round(basePrice * (1 - discountPercent / 100));
@@ -181,6 +186,11 @@
           container.innerHTML = `
             <span class="text-2xl sm:text-3xl text-white font-bold font-mono price-display" data-base="${basePrice}">${formatARS(basePrice)}</span>
             <span class="text-xs text-primary font-mono currency-tag">ARS</span>`;
+        }
+
+        // Restauramos el enlace de WhatsApp en caso de que se haya perdido
+        if (btn && originalHref) {
+           btn.setAttribute('href', originalHref);
         }
       });
 
