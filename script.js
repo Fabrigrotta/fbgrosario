@@ -175,6 +175,33 @@
         navBtn.classList.add('from-emerald-500', 'via-teal-600', 'to-primary', 'border-emerald-400');
       }
 
+      // 1. Guardar el uso en la base de datos local (localStorage)
+      let allCoupons = JSON.parse(localStorage.getItem('fbg_coupons') || '[]');
+      const couponIndex = allCoupons.findIndex(c => c.code === rawCode);
+      
+      if (couponIndex > -1) {
+        let c = allCoupons[couponIndex];
+        c.uses = (c.uses || 0) + 1; // Sumamos 1 uso
+        
+        // Si llega al límite, lo pasamos a expirado/agotado automáticamente
+        if (c.limit > 0 && c.uses >= c.limit) {
+          c.status = 'EXPIRADO';
+        }
+        localStorage.setItem('fbg_coupons', JSON.stringify(allCoupons));
+
+        // GUARDAR HISTORIAL DE CANJES (Para el panel de Admin)
+        let logs = JSON.parse(localStorage.getItem('fbg_coupon_logs') || '[]');
+        const newLog = {
+          code: rawCode,
+          date: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'}),
+          id: `CLI-${Math.floor(Math.random() * 9000) + 1000}` // Simulamos un ID de cliente
+        };
+        logs.unshift(newLog); // Lo ponemos al principio
+        if (logs.length > 20) logs.pop(); // Guardamos máximo los últimos 20
+        localStorage.setItem('fbg_coupon_logs', JSON.stringify(logs));
+      }
+
+      // 2. Aplicar visualmente los precios y cerrar el modal
       updateAllPrices(pendingCoupon);
       closeModal(); // Cierra el modal tras aplicar
     }
