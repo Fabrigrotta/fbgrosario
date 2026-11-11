@@ -8,6 +8,60 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => root.querySelectorAll(sel);
 
+  // --- Lógica de Confirmación y Notificaciones Personalizadas ---
+  window.showConfirm = function(title, message, onAccept) {
+    const modal = document.getElementById('custom-confirm-modal');
+    if (!modal) return;
+    
+    document.getElementById('confirm-title').innerText = title;
+    document.getElementById('confirm-message').innerText = message;
+    
+    modal.classList.remove('hidden');
+    
+    const acceptBtn = document.getElementById('confirm-accept-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+    
+    const newAcceptBtn = acceptBtn.cloneNode(true);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    
+    newAcceptBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      onAccept();
+    });
+    
+    newCancelBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+  };
+
+  window.showGlobalToast = function(message, isError = false) {
+    const toast = document.getElementById('global-toast');
+    const icon = document.getElementById('global-toast-icon');
+    const msg = document.getElementById('global-toast-msg');
+    
+    if (!toast) return;
+    
+    msg.innerText = message;
+    
+    if (isError) {
+      icon.innerText = 'error';
+      icon.className = 'material-symbols-outlined text-red-500 text-xl';
+      toast.querySelector('div').className = 'flex items-center gap-3 px-4 py-3 rounded-xl bg-[#090b14] border border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)] min-w-[250px]';
+    } else {
+      icon.innerText = 'verified';
+      icon.className = 'material-symbols-outlined text-primary text-xl';
+      toast.querySelector('div').className = 'flex items-center gap-3 px-4 py-3 rounded-xl bg-[#090b14] border border-primary/50 shadow-[0_0_20px_rgba(0,240,255,0.2)] min-w-[250px]';
+    }
+    
+    toast.classList.remove('translate-x-[150%]');
+    
+    setTimeout(() => {
+      toast.classList.add('translate-x-[150%]');
+    }, 3500);
+  };
+
   /* ============================================================
      1. MENÚ MOBILE
      ============================================================ */
@@ -55,7 +109,6 @@
       });
       return activeOnly;
     }
-    // Fallback
     return {
       FBG10: { code: 'FBG10', type: 'PERCENT', value: 10 },
       PROMO15: { code: 'PROMO15', type: 'PERCENT', value: 15 },
@@ -79,7 +132,6 @@
 
     if (!modal) return;
 
-    // Referencia al cupón que está validado en el modal
     let pendingCoupon = null;
 
     function openModal() {
@@ -105,7 +157,6 @@
       }
     }
 
-    // 1. SOLO VALIDA Y MUESTRA EL CARTEL VERDE
     function validateCoupon() {
       const rawCode = (input?.value || '').trim().toUpperCase();
       
@@ -118,9 +169,7 @@
       }
 
       const availableCoupons = getCouponsFromStorage();
-      let couponData = availableCoupons[rawCode]; // Solo busca si existe de verdad
-
-      // ELIMINAMOS EL FALLBACK QUE INVENTABA CUPONES
+      let couponData = availableCoupons[rawCode];
 
       if (couponData) {
         pendingCoupon = couponData;
@@ -134,7 +183,6 @@
           successMsg.innerText = `¡CUPÓN VÁLIDO! ${rawCode} aplica ${typeStr}${val} de descuento.`;
         }
 
-        // Cambiamos el texto del botón para que diga "Aplicar Descuento"
         if (applyBtn) {
           applyBtn.innerHTML = `<span class="material-symbols-outlined text-sm">check_circle</span><span>Aplicar Descuento</span>`;
           applyBtn.classList.remove('bg-gradient-to-r', 'from-secondary', 'to-primary', 'text-white');
@@ -145,10 +193,10 @@
         errorAlert?.classList.remove('hidden');
         successAlert?.classList.add('hidden');
         resetApplyBtn();
+        window.showGlobalToast('Cupón inválido o no existente', true);
       }
     }
 
-    // 2. APLICA REALMENTE EL DESCUENTO Y CIERRA EL MODAL
     function applyCoupon() {
       if (!pendingCoupon) {
         validateCoupon();
@@ -169,35 +217,34 @@
         navBtn.classList.add('from-emerald-500', 'via-teal-600', 'to-primary', 'border-emerald-400');
       }
 
-      // 1. Guardar el uso en la base de datos local (localStorage)
+      // 1. Guardar el uso en la base de datos local
       let allCoupons = JSON.parse(localStorage.getItem('fbg_coupons') || '[]');
       const couponIndex = allCoupons.findIndex(c => c.code === rawCode);
       
       if (couponIndex > -1) {
         let c = allCoupons[couponIndex];
-        c.uses = (c.uses || 0) + 1; // Sumamos 1 uso
+        c.uses = (c.uses || 0) + 1;
         
-        // Si llega al límite, lo pasamos a expirado/agotado automáticamente
         if (c.limit > 0 && c.uses >= c.limit) {
           c.status = 'EXPIRADO';
         }
         localStorage.setItem('fbg_coupons', JSON.stringify(allCoupons));
 
-        // GUARDAR HISTORIAL DE CANJES (Para el panel de Admin)
+        // Guardar historial
         let logs = JSON.parse(localStorage.getItem('fbg_coupon_logs') || '[]');
         const newLog = {
           code: rawCode,
           date: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'}),
-          id: `CLI-${Math.floor(Math.random() * 9000) + 1000}` // Simulamos un ID de cliente
+          id: `CLI-${Math.floor(Math.random() * 9000) + 1000}`
         };
-        logs.unshift(newLog); // Lo ponemos al principio
-        if (logs.length > 20) logs.pop(); // Guardamos máximo los últimos 20
+        logs.unshift(newLog);
+        if (logs.length > 20) logs.pop();
         localStorage.setItem('fbg_coupon_logs', JSON.stringify(logs));
       }
 
-      // 2. Aplicar visualmente los precios y cerrar el modal
+      // 2. Aplicar visualmente
       updateAllPrices(pendingCoupon);
-      closeModal(); // Cierra el modal tras aplicar
+      closeModal();
     }
 
     function removeCoupon() {
@@ -219,18 +266,21 @@
       updateAllPrices({ type: 'PERCENT', value: 0 });
     }
 
-    // Actualizar precios en la interfaz
     function updateAllPrices(discountData) {
       const isPercent = discountData.type === 'PERCENT';
       const val = discountData.value;
+      const applyToAll = !discountData.services || discountData.services.length === 0;
 
       $$('[data-price-container]').forEach((container) => {
         const basePrice = parseInt(container.getAttribute('data-price-container'), 10);
         const card = container.closest('.cyber-plan-card');
         const btn = card ? card.querySelector('.card-btn-action') : null;
         const originalHref = btn ? btn.getAttribute('href') : null;
+        const cardTitle = card ? card.querySelector('h3').innerText.trim() : '';
+        
+        const applyDiscountHere = applyToAll || discountData.services.includes(cardTitle);
 
-        if (val > 0) {
+        if (val > 0 && applyDiscountHere) {
           let discounted = basePrice;
           let badgeText = '';
           if (isPercent) {
@@ -262,7 +312,7 @@
         const basePrice = parseInt(span.getAttribute('data-base'), 10);
         const parent = span.parentElement;
 
-        if (val > 0) {
+        if (val > 0 && applyToAll) {
           let discounted = basePrice;
           let badgeText = '';
           if (isPercent) {
@@ -286,22 +336,14 @@
       });
     }
 
-    // Event Listeners
     openBtns.forEach((btn) => btn && btn.addEventListener('click', openModal));
-    
-    // Al tocar aplicar, ejecuta applyCoupon()
     applyBtn && applyBtn.addEventListener('click', applyCoupon);
-
-    // Al tipear en el input, ejecuta validateCoupon()
     input && input.addEventListener('input', validateCoupon);
-
     $$('[data-close-coupon]').forEach((btn) => btn.addEventListener('click', closeModal));
     
-    // Al tocar un chip, solo setea el valor en el input (no valida solo)
     $$('[data-coupon]').forEach((btn) => btn.addEventListener('click', () => {
       if (input) {
         input.value = btn.getAttribute('data-coupon');
-        // Quitamos el cartel de error anterior y ponemos foco en el input
         errorAlert?.classList.add('hidden');
         successAlert?.classList.add('hidden');
         pendingCoupon = null;
@@ -311,12 +353,8 @@
     
     $$('[data-remove-coupon]').forEach((btn) => btn.addEventListener('click', removeCoupon));
 
-    // Al presionar Enter, aplica el cupón
     input && input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { 
-        e.preventDefault(); 
-        applyCoupon(); 
-      }
+      if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); }
     });
 
     window.addEventListener('keydown', (e) => {
@@ -327,13 +365,12 @@
       if (e.target === modal) closeModal();
     });
 
-    // Chequeo automático si viene por URL
     const urlParams = new URLSearchParams(window.location.search);
     const cuponParam = urlParams.get('cupon');
     if (cuponParam) {
       if (input) input.value = cuponParam;
-      validateCoupon(); // Lo valida y muestra el cartel
-      openModal(); // Abre el modal para que el usuario vea que hay un cupón listo para aplicar
+      validateCoupon();
+      openModal();
     }
   }
 
@@ -344,7 +381,6 @@
     const canvas = document.getElementById('hero-particles');
     const section = document.getElementById('hero-section');
     if (!canvas || !section) return;
-
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const ctx = canvas.getContext('2d');
@@ -380,36 +416,25 @@
     class Particle {
       constructor() { this.reset(); }
       reset() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
+        this.x = Math.random() * width; this.y = Math.random() * height;
         this.size = Math.random() * 2.8 + 1.2;
         const scheme = palettes[Math.floor(Math.random() * palettes.length)];
-        this.colorBase = scheme.color;
-        this.glowColor = scheme.glow;
+        this.colorBase = scheme.color; this.glowColor = scheme.glow;
         this.alpha = Math.random() * 0.6 + 0.35;
         const angle = Math.random() * Math.PI * 2;
         const speed = Math.random() * 0.25 + 0.1;
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
+        this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
         this.pushX = 0; this.pushY = 0;
       }
       draw() {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fillStyle = this.colorBase + this.alpha + ')';
-        ctx.shadowColor = this.glowColor;
-        ctx.shadowBlur = this.size > 2.5 ? 12 : 8;
-        ctx.fill();
-        ctx.restore();
+        ctx.save(); ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.closePath();
+        ctx.fillStyle = this.colorBase + this.alpha + ')'; ctx.shadowColor = this.glowColor;
+        ctx.shadowBlur = this.size > 2.5 ? 12 : 8; ctx.fill(); ctx.restore();
       }
       update() {
-        this.x += this.vx + this.pushX;
-        this.y += this.vy + this.pushY;
+        this.x += this.vx + this.pushX; this.y += this.vy + this.pushY;
         this.pushX *= 0.94; this.pushY *= 0.94;
-        const dx = mouse.x - this.x;
-        const dy = mouse.y - this.y;
+        const dx = mouse.x - this.x; const dy = mouse.y - this.y;
         const distance = Math.hypot(dx, dy);
         if (distance < mouse.radius && distance > 0.1) {
           const force = (mouse.radius - distance) / mouse.radius;
@@ -417,49 +442,35 @@
           this.pushY -= (dy / distance) * force * 1.8;
         }
         const margin = 10;
-        if (this.x < -margin) this.x = width + margin;
-        else if (this.x > width + margin) this.x = -margin;
-        if (this.y < -margin) this.y = height + margin;
-        else if (this.y > height + margin) this.y = -margin;
+        if (this.x < -margin) this.x = width + margin; else if (this.x > width + margin) this.x = -margin;
+        if (this.y < -margin) this.y = height + margin; else if (this.y > height + margin) this.y = -margin;
       }
     }
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw();
-      }
+      for (let i = 0; i < particles.length; i++) { particles[i].update(); particles[i].draw(); }
       animationId = requestAnimationFrame(animate);
     }
 
     function start() {
-      updateDimensions();
-      particles.length = 0;
+      updateDimensions(); particles.length = 0;
       for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
       if (animationId) cancelAnimationFrame(animationId);
       animate();
     }
 
-    function onResize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      updateDimensions();
-    }
-
     start();
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', () => { dpr = Math.min(window.devicePixelRatio || 1, 2); updateDimensions(); });
 
     section.addEventListener('mousemove', (e) => {
       const rect = section.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
+      mouse.x = e.clientX - rect.left; mouse.y = e.clientY - rect.top;
     });
     section.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
     section.addEventListener('touchmove', (e) => {
-      const rect = section.getBoundingClientRect();
-      const t = e.touches[0];
-      mouse.x = t.clientX - rect.left;
-      mouse.y = t.clientY - rect.top;
+      const rect = section.getBoundingClientRect(); const t = e.touches[0];
+      mouse.x = t.clientX - rect.left; mouse.y = t.clientY - rect.top;
     }, { passive: true });
     section.addEventListener('touchend', () => { mouse.x = -9999; mouse.y = -9999; });
   }
@@ -470,10 +481,5 @@
     initParticles();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 })();
