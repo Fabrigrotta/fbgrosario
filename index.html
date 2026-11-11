@@ -8,11 +8,13 @@
   <meta name="theme-color" content="#050609">
   <title>FBG Servicio Técnico | Especialistas en Mantenimiento y Hardware</title>
 
+  <!-- Fuentes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script>
     tailwind.config = {
@@ -38,6 +40,7 @@
     };
   </script>
 
+  <!-- Estilos Personalizados -->
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -154,7 +157,7 @@
             </span>
             <div class="flex flex-col text-left min-w-0">
               <span class="text-[10px] sm:text-[11px] text-emerald-400 uppercase tracking-widest leading-tight">WhatsApp Directo</span>
-              <span class="text-white text-[13px] sm:text-[15px] font-bold truncate">+54 9 341 592-2559</span>
+              <span class="text-white text-[13px] sm:text-[15px] font-bold truncate">+54 9 341 5922559</span>
             </div>
           </a>
 
@@ -214,6 +217,7 @@
     <!-- ============ SERVICIOS / PLANES ============ -->
     <section id="servicios" class="w-full py-14 sm:py-20 bg-[#08090f] border-b border-slate-800/80 cyber-grid">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+        
         <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-primary/10 border border-primary/30 mb-2">
             <span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
@@ -507,7 +511,7 @@
             <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
               <a href="https://wa.me/5493415922559" target="_blank" rel="noopener" class="px-4 sm:px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all">
                 <span class="material-symbols-outlined text-[18px]">chat</span>
-                WhatsApp: +54 9 341 592-2559
+                WhatsApp: +54 9 341 5922559
               </a>
               <a href="https://www.instagram.com/fbg.rosario?exln=MzUxajU3NGwwdnh3" target="_blank" rel="noopener" class="px-4 sm:px-6 py-3 rounded-xl bg-secondary hover:bg-pink-600 text-white font-mono text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all">
                 <span class="material-symbols-outlined text-[18px]">camera_alt</span>
@@ -538,7 +542,7 @@
       <span>© 2026 FBG Servicio Técnico. Todos los derechos reservados.</span>
       <div class="flex gap-5 sm:gap-6">
         <a href="https://www.instagram.com/fbg.rosario?exln=MzUxajU3NGwwdnh3" target="_blank" rel="noopener" class="hover:text-secondary transition-colors">@fbg.rosario</a>
-        <a href="https://wa.me/5493415922559" target="_blank" rel="noopener" class="hover:text-primary transition-colors">+54 9 341 592-2559</a>
+        <a href="https://wa.me/5493415922559" target="_blank" rel="noopener" class="hover:text-primary transition-colors">+54 9 341 5922559</a>
       </div>
     </div>
   </footer>
@@ -573,7 +577,7 @@
             <input id="coupon-input" type="text" placeholder="Ej: FBG10, PROMO15" class="w-full px-3 sm:px-4 py-3 bg-[#05060b] border border-primary/40 rounded-xl text-white font-mono text-sm uppercase tracking-wider placeholder-slate-600 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all shadow-inner disabled:opacity-50 disabled:cursor-not-allowed" autocomplete="off" spellcheck="false">
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-mono text-xs pointer-events-none">OFF%</span>
           </div>
-          <!-- Contador de Bloqueo (Oculto por defecto) -->
+          <!-- Contador de Bloqueo -->
           <div id="coupon-lockout-msg" class="hidden text-red-400 text-[10px] font-mono mt-2 font-bold">
             [BLOQUEO ANTIBRUTEFORCE] Demasiados intentos. Espere <span id="lockout-timer">60</span>s.
           </div>
@@ -642,6 +646,6 @@
     </div>
   </div>
 
-  <script src="script.js" defer></script>
+  <script src="script.js"></script>
 </body>
 </html>

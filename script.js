@@ -8,9 +8,6 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => root.querySelectorAll(sel);
 
-  // Variables globales para el simulador y descuentos
-  let currentGlobalDiscount = null;
-
   // --- Lógica de Confirmación y Notificaciones Personalizadas ---
   window.showConfirm = function(title, message, onAccept) {
     const modal = document.getElementById('custom-confirm-modal');
@@ -100,69 +97,7 @@
   }
 
   /* ============================================================
-     2. SIMULADOR DE PRESUPUESTO (COTIZADOR)
-     ============================================================ */
-  window.updateSimulatorUI = function() {
-    const select = document.getElementById('sim-service-select');
-    const priceDisplay = document.getElementById('sim-price');
-    const discountBadge = document.getElementById('sim-discount-badge');
-    const waBtn = document.getElementById('sim-whatsapp-btn');
-
-    if (!select || !select.value) {
-      priceDisplay.innerText = '$ 0';
-      discountBadge.innerText = '';
-      if (waBtn) waBtn.classList.add('pointer-events-none', 'opacity-50');
-      return;
-    }
-
-    const selectedOption = select.options[select.selectedIndex];
-    const serviceName = select.value;
-    let basePrice = parseInt(selectedOption.getAttribute('data-price')) || 0;
-    
-    let finalPrice = basePrice;
-    let hasDiscount = false;
-
-    // Si hay un cupón global activo, calcular descuento
-    if (currentGlobalDiscount && currentGlobalDiscount.value > 0) {
-      const applyToAll = !currentGlobalDiscount.services || currentGlobalDiscount.services.length === 0;
-      const appliesToThis = applyToAll || currentGlobalDiscount.services.includes(serviceName);
-
-      if (appliesToThis) {
-        hasDiscount = true;
-        if (currentGlobalDiscount.type === 'PERCENT') {
-          finalPrice = Math.round(basePrice * (1 - currentGlobalDiscount.value / 100));
-          discountBadge.innerText = `-${currentGlobalDiscount.value}% OFF`;
-        } else {
-          finalPrice = Math.max(0, basePrice - currentGlobalDiscount.value);
-          discountBadge.innerText = `-$${currentGlobalDiscount.value.toLocaleString('es-AR')} OFF`;
-        }
-      }
-    }
-
-    // Actualizar precio
-    priceDisplay.innerText = `$ ${finalPrice.toLocaleString('es-AR')}`;
-    
-    // Estilos si tiene descuento
-    if (hasDiscount) {
-      discountBadge.className = 'text-xs text-secondary font-mono font-bold bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/30';
-      priceDisplay.classList.add('text-secondary', 'drop-shadow-[0_0_10px_rgba(255,0,127,0.5)]');
-      priceDisplay.classList.remove('text-primary', 'drop-shadow-[0_0_10px_rgba(0,240,255,0.4)]');
-    } else {
-      discountBadge.innerText = '';
-      priceDisplay.classList.remove('text-secondary', 'drop-shadow-[0_0_10px_rgba(255,0,127,0.5)]');
-      priceDisplay.classList.add('text-primary', 'drop-shadow-[0_0_10px_rgba(0,240,255,0.4)]');
-    }
-
-    // Configurar botón de WhatsApp
-    if (waBtn) {
-      waBtn.classList.remove('pointer-events-none', 'opacity-50');
-      const msg = encodeURIComponent(`Hola FBG Servicio Técnico. Estoy usando el cotizador de la web. Me interesa el servicio de: *${serviceName}*.\n\nCosto estimado: $${finalPrice.toLocaleString('es-AR')} ARS.\n\n¿Tienen disponibilidad?`);
-      waBtn.href = `https://wa.me/5493415922559?text=${msg}`;
-    }
-  };
-
-  /* ============================================================
-     3. SISTEMA DE CUPONES
+     2. SISTEMA DE CUPONES
      ============================================================ */
   function getCouponsFromStorage() {
     const stored = localStorage.getItem('fbg_coupons');
@@ -198,8 +133,6 @@
     if (!modal) return;
 
     let pendingCoupon = null;
-
-    // --- VARIABLES ANTIBRUTEFORCE Y USO ÚNICO ---
     let failedAttempts = 0;
     let isLockedOut = false;
     let lockoutInterval = null;
@@ -215,20 +148,6 @@
         localStorage.setItem('fbg_used_coupons', JSON.stringify(used));
       }
     }
-
-    // Listener para detectar si el usuario cambia el código después de validar
-    input && input.addEventListener('input', () => {
-      const currentInput = (input.value || '').trim().toUpperCase();
-      // Si ya había un cupón validado y el usuario cambia el texto, reseteamos todo
-      if (pendingCoupon && pendingCoupon.code !== currentInput) {
-        pendingCoupon = null;
-        successAlert?.classList.add('hidden');
-        errorAlert?.classList.add('hidden');
-        resetApplyBtn();
-      }
-    });
-
-    // --------------------------------------------
 
     function openModal() {
       modal.classList.remove('hidden');
@@ -254,7 +173,7 @@
     }
 
     function validateCoupon() {
-      if (isLockedOut) return; // Si está bloqueado, no hace nada
+      if (isLockedOut) return;
 
       const rawCode = (input?.value || '').trim().toUpperCase();
       
@@ -270,7 +189,6 @@
       let couponData = availableCoupons[rawCode];
       const usedCoupons = getUsedCoupons();
 
-      // Validamos si ya lo usó (1 Canje por dispositivo)
       if (usedCoupons.includes(rawCode)) {
         pendingCoupon = null;
         errorAlert?.classList.remove('hidden');
@@ -281,7 +199,7 @@
       }
 
       if (couponData) {
-        failedAttempts = 0; // Reseteamos contador de error
+        failedAttempts = 0;
         pendingCoupon = couponData;
         const isPercent = couponData.type === 'PERCENT';
         const val = couponData.value;
@@ -304,7 +222,6 @@
         successAlert?.classList.add('hidden');
         resetApplyBtn();
         
-        // Lógica Anti-Bruteforce
         failedAttempts++;
         if (failedAttempts >= 5) {
           triggerLockout();
@@ -342,8 +259,6 @@
     }
 
     function applyCoupon() {
-      // Si no hay cupón validado todavía, validamos y cortamos la ejecución.
-      // Si el texto en el input cambió, también forzamos validación.
       const currentInput = (input?.value || '').trim().toUpperCase();
       
       if (!pendingCoupon || pendingCoupon.code !== currentInput) {
@@ -365,7 +280,6 @@
         navBtn.classList.add('from-emerald-500', 'via-teal-600', 'to-primary', 'border-emerald-400');
       }
 
-      // 1. Guardar el uso en la base de datos local
       let allCoupons = JSON.parse(localStorage.getItem('fbg_coupons') || '[]');
       const couponIndex = allCoupons.findIndex(c => c.code === rawCode);
       
@@ -378,7 +292,6 @@
         }
         localStorage.setItem('fbg_coupons', JSON.stringify(allCoupons));
 
-        // Guardar historial
         let logs = JSON.parse(localStorage.getItem('fbg_coupon_logs') || '[]');
         const newLog = {
           code: rawCode,
@@ -390,11 +303,8 @@
         localStorage.setItem('fbg_coupon_logs', JSON.stringify(logs));
       }
 
-      // 2. Marcar como usado y aplicar visualmente
       markCouponAsUsed(rawCode);
-      currentGlobalDiscount = pendingCoupon; 
       updateAllPrices(pendingCoupon);
-      window.updateSimulatorUI();
       closeModal();
     }
 
@@ -414,9 +324,7 @@
       }
       
       resetApplyBtn();
-      currentGlobalDiscount = null; // <-- Limpiamos el cupón global
       updateAllPrices({ type: 'PERCENT', value: 0 });
-      window.updateSimulatorUI();
     }
 
     function updateAllPrices(discountData) {
@@ -492,9 +400,16 @@
     openBtns.forEach((btn) => btn && btn.addEventListener('click', openModal));
     applyBtn && applyBtn.addEventListener('click', applyCoupon);
     
-    // ELIMINAMOS el evento 'input' para que no valide mientras escribe
-    // input && input.addEventListener('input', validateCoupon); 
-    
+    input && input.addEventListener('input', () => {
+      const currentInput = (input.value || '').trim().toUpperCase();
+      if (pendingCoupon && pendingCoupon.code !== currentInput) {
+        pendingCoupon = null;
+        successAlert?.classList.add('hidden');
+        errorAlert?.classList.add('hidden');
+        resetApplyBtn();
+      }
+    });
+
     $$('[data-close-coupon]').forEach((btn) => btn.addEventListener('click', closeModal));
     
     $$('[data-coupon]').forEach((btn) => btn.addEventListener('click', () => {
@@ -531,7 +446,7 @@
   }
 
   /* ============================================================
-     4. CANVAS DE PARTÍCULAS
+     3. CANVAS DE PARTÍCULAS
      ============================================================ */
   function initParticles() {
     const canvas = document.getElementById('hero-particles');
@@ -635,11 +550,6 @@
     initMobileMenu();
     initCouponSystem();
     initParticles();
-    
-    // Inicializar el simulador al cargar la página
-    if (document.getElementById('sim-service-select')) {
-      window.updateSimulatorUI();
-    }
   }
 
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }

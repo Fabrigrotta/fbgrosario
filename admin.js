@@ -2,14 +2,10 @@
    ADMIN.JS - Lógica del Panel de Administración de Cupones
    ============================================================ */
 
-/* ============================================================
-   SEGURIDAD Y LOGIN
-   ============================================================ */
-// Credenciales (Podés cambiarlas acá)
+// --- SEGURIDAD Y LOGIN ---
 const AUTH_USER = "fabri.grotta";
 const AUTH_PASS = "FBG.rosario2026";
 
-// Verificar sesión al cargar la página
 function checkAuth() {
   const isLogged = sessionStorage.getItem('fbg_admin_logged');
   const loginScreen = document.getElementById('login-screen');
@@ -36,37 +32,31 @@ function handleLogin(e) {
   if (user === AUTH_USER && pass === AUTH_PASS) {
     sessionStorage.setItem('fbg_admin_logged', 'true');
     errorDiv.classList.add('hidden');
-    checkAuth(); // Muestra la app
-    renderTable(); // Carga los datos
+    checkAuth();
+    renderTable();
   } else {
     errorDiv.classList.remove('hidden');
-    document.getElementById('login-pass').value = ''; // Limpia la contraseña
+    document.getElementById('login-pass').value = '';
     document.getElementById('login-pass').focus();
   }
 }
 
 function handleLogout() {
-  // 1. Borramos el token de sesión
   sessionStorage.removeItem('fbg_admin_logged');
-  
-  // 2. Mostramos un aviso rápido (opcional, si querés que se vea el Toast antes de salir)
   if (window.showGlobalToast) {
     window.showGlobalToast('Sesión finalizada. Redirigiendo...', false);
   }
-  
-  // 3. Redirigimos al inicio después de un breve delay para que se lea el mensaje
   setTimeout(() => {
     window.location.href = 'index.html';
   }, 800);
 }
 
-// Ejecutar la verificación ni bien carga el DOM
 document.addEventListener('DOMContentLoaded', checkAuth);
 
+// --- LÓGICA DE CUPONES ---
 let currentDiscountType = 'PERCENT';
 let editingCouponId = null;
 
-// --- Lógica de Confirmación y Notificaciones Personalizadas ---
 function showConfirm(title, message, onAccept) {
   const modal = document.getElementById('custom-confirm-modal');
   if (!modal) return;
@@ -124,7 +114,6 @@ function showToast(msg, isError = false) {
   showGlobalToast(msg, isError);
 }
 
-// 1. Obtener cupones desde el localStorage
 function getStoredCoupons() {
   const stored = localStorage.getItem('fbg_coupons');
   if (stored) return JSON.parse(stored);
@@ -145,7 +134,6 @@ function saveCoupons(coupons) {
   localStorage.setItem('fbg_coupons', JSON.stringify(coupons));
 }
 
-// 2. Sincronizar Checkboxes de Servicios
 function toggleAllServices(source) {
   const checkboxes = document.querySelectorAll('.service-checkbox');
   checkboxes.forEach(cb => cb.checked = source.checked);
@@ -157,15 +145,11 @@ function checkAllStatus() {
   
   const checkAllBox = document.getElementById('checkAllServices');
   if (checkAllBox) {
-    // Forzamos a que SIEMPRE sea false el indeterminate
     checkAllBox.indeterminate = false; 
-    
-    // Si están todos tildados, se marca. Si no, se destilda.
     checkAllBox.checked = allChecked;
   }
 }
 
-// 3. Renderizar la tabla compacta
 function renderTable() {
   const coupons = getStoredCoupons();
   const tbody = document.getElementById('couponsBody');
@@ -186,13 +170,11 @@ function renderTable() {
       dateFormatted = `${day}/${month}/${year}`;
     }
 
-    // Armamos las etiquetas visuales de los servicios
     let servicesHTML = '';
     if (c.services && c.services.length > 0) {
       if (c.services.length === 4) {
         servicesHTML = `<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-[11px] w-full text-center">Todos los servicios</span>`;
       } else {
-        // Acortamos los nombres para que entren bien en la tabla
         const shortNames = c.services.map(s => {
           if (s === 'Armado PC Gamer') return 'Gamer';
           if (s === 'Combo Mantenimiento') return 'Combo';
@@ -277,7 +259,6 @@ function renderTable() {
   renderLiveFeed();
 }
 
-// 4. Historial
 function renderLiveFeed() {
   const feed = document.getElementById('liveLogFeed');
   if (!feed) return;
@@ -307,21 +288,29 @@ function renderLiveFeed() {
   }).join('');
 }
 
-// 5. KPIs
+function clearLogs() {
+  showConfirm(
+    'Borrar Historial', 
+    '¿Estás seguro de que deseas borrar permanentemente todo el historial de canjes del laboratorio? Esta acción no se puede deshacer.', 
+    () => {
+      localStorage.removeItem('fbg_coupon_logs');
+      renderLiveFeed(); // Vuelve a dibujar el feed (que ahora estará vacío)
+      showToast('// HISTORIAL DE CANJES ELIMINADO');
+    }
+  );
+}
+
 function updateKPIs() {
   const coupons = getStoredCoupons();
   
-  // KPI 1: Cupones Activos
   const activeCount = coupons.filter(c => c.status === 'ACTIVO' && (c.uses || 0) < (c.limit || 50)).length;
   const kpi1 = document.querySelector('.grid .hud-corner:nth-child(1) span.text-white');
   if (kpi1) kpi1.innerText = activeCount.toString().padStart(2, '0');
 
-  // KPI 2: Canjes Totales
   const totalUses = coupons.reduce((sum, c) => sum + (c.uses || 0), 0);
   const kpi2 = document.querySelector('.grid .hud-corner:nth-child(2) span.text-white');
   if (kpi2) kpi2.innerText = totalUses;
 
-  // KPI 3 (La barra): Porcentaje de cupones % vs $
   let percentCount = 0;
   let fixedCount = 0;
   
@@ -335,11 +324,9 @@ function updateKPIs() {
     const pPercent = Math.round((percentCount / total) * 100);
     const pFixed = Math.round((fixedCount / total) * 100);
 
-    // Buscamos los elementos de la barra en el HTML del admin
     const barPercent = document.querySelector('.bg-primary.h-full');
     const barFixed = document.querySelector('.bg-secondary.h-full');
     
-    // Buscamos los textos de abajo de la barra
     const textPercent = document.querySelector('.flex.justify-between.text-\\[11px\\].text-slate-400.mt-2 span:first-child');
     const textFixed = document.querySelector('.flex.justify-between.text-\\[11px\\].text-slate-400.mt-2 span:last-child');
 
@@ -350,7 +337,6 @@ function updateKPIs() {
   }
 }
 
-// 6. Modal y Formulario
 function openModal() {
   document.getElementById('couponModal').classList.remove('hidden');
   document.getElementById('modalTitle').innerText = 'Crear Cupón // FBG LAB';
@@ -433,7 +419,6 @@ function handleFormSubmit(e) {
   
   const selectedServices = Array.from(document.querySelectorAll('.service-checkbox:checked')).map(cb => cb.value);
 
-  // VALIDACIÓN: Al menos un servicio debe estar seleccionado
   if (selectedServices.length === 0) {
     showToast('Debes seleccionar al menos un servicio.', true);
     return;
@@ -499,7 +484,6 @@ function editCoupon(id) {
   }
   
   checkAllStatus();
-
   updatePreview();
 }
 
@@ -559,8 +543,63 @@ function setFilter(type) {
   });
 }
 
-// Inicializar al cargar
-document.addEventListener('DOMContentLoaded', renderTable);
+/* ============================================================
+   PARTÍCULAS DE FONDO Y EVENTOS INICIALES
+   ============================================================ */
+(function() {
+  const canvas = document.getElementById('ambient-particles');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let width = 0, height = 0;
+  const mouse = { x: -9999, y: -9999, radius: 180 };
+  
+  function updateDimensions() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+  window.addEventListener('resize', updateDimensions);
+  window.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('mouseleave', function() { mouse.x = -9999; mouse.y = -9999; });
+  
+  const particlePalettes = [
+    { color: 'rgba(255, 0, 127, ', glow: '#ff007f' },
+    { color: 'rgba(0, 240, 255, ', glow: '#00f0ff' },
+    { color: 'rgba(192, 132, 252, ', glow: '#c084fc' }
+  ];
+  const particleCount = 100;
+  let particles = [];
+  
+  class AmbientDot {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * width; this.y = Math.random() * height;
+      this.size = Math.random() * 2.2 + 1;
+      const scheme = particlePalettes[Math.floor(Math.random() * particlePalettes.length)];
+      this.colorBase = scheme.color; this.glowColor = scheme.glow;
+      this.alpha = Math.random() * 0.5 + 0.3;
+      const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 0.2 + 0.08;
+      this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+      this.pushX = 0; this.pushY = 0;
+    }
+    draw() {
+      ctx.save(); ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.closePath();
+      ctx.fillStyle = this.colorBase + this.alpha + ')'; ctx.shadowColor = this.glowColor;
+      ctx.shadowBlur = this.size > 2 ? 10 : 6; ctx.fill(); ctx.restore();
+    }
+    update() {
+      this.x += this.vx + this.pushX; this.y += this.vy + this.pushY;
+      this.pushX *= 0.93; this.pushY *= 0.93;
+      const dx = mouse.x - this.x; const dy = mouse.y - this.y; const dist = Math.hypot(dx, dy);
+      if (dist < mouse.radius && dist > 0.1) { const force = (mouse.radius - dist) / mouse.radius; this.pushX -= (dx / dist) * force * 1.5; this.pushY -= (dy / dist) * force * 1.5; }
+      const margin = 10;
+      if (this.x < -margin) this.x = width + margin; else if (this.x > width + margin) this.x = -margin;
+      if (this.y < -margin) this.y = height + margin; else if (this.y > height + margin) this.y = -margin;
+    }
+  }
+  
+  function init() { updateDimensions(); particles = []; for (let i = 0; i < particleCount; i++) particles.push(new AmbientDot()); }
+  function loop() { ctx.clearRect(0, 0, width, height); for (let i = 0; i < particles.length; i++) { particles[i].update(); particles[i].draw(); } requestAnimationFrame(loop); }
+  
+  init(); 
+  loop();
+})();
 
 window.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
