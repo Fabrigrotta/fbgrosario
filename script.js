@@ -334,22 +334,10 @@
     }
 
     function removeCoupon() {
-      if (input) input.value = '';
-      successAlert?.classList.add('hidden');
-      errorAlert?.classList.add('hidden');
-      pendingCoupon = null;
-
-      btnTexts.forEach((el) => {
-        if (el) el.innerText = 'Canjear Cupón';
-      });
-
-      if (navBtn) {
-        navBtn.classList.remove('from-emerald-500', 'via-teal-600', 'border-emerald-400');
-        navBtn.classList.add('from-secondary', 'to-primary');
-      }
-      
-      resetApplyBtn();
-      updateAllPrices({ type: 'PERCENT', value: 0 });
+      // Recargamos la página directamente. 
+      // Como el cupón no se guarda en localStorage, al recargar 
+      // los precios vuelven a su estado original de fábrica.
+      window.location.reload();
     }
 
     function updateAllPrices(discountData) {

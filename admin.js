@@ -41,6 +41,19 @@ function handleLogin(e) {
   }
 }
 
+function togglePasswordVisibility() {
+  const passInput = document.getElementById('login-pass');
+  const icon = document.getElementById('toggle-pass-icon');
+  
+  if (passInput.type === 'password') {
+    passInput.type = 'text';
+    icon.innerText = 'visibility_off'; // Ícono de ojo tachado
+  } else {
+    passInput.type = 'password';
+    icon.innerText = 'visibility'; // Ícono de ojo normal
+  }
+}
+
 function handleLogout() {
   sessionStorage.removeItem('fbg_admin_logged');
   if (window.showGlobalToast) {
@@ -121,10 +134,10 @@ function getStoredCoupons() {
   const today = new Date();
   const nextMonth = new Date(today.setMonth(today.getMonth() + 1)).toISOString().split('T')[0];
   const defaultCoupons = [
-    { id: 'CUP-9921', code: 'FBGGAMER20', type: 'PERCENT', value: 20, limit: 50, uses: 32, expiry: nextMonth, services: ['Armado PC Gamer'], status: 'ACTIVO' },
-    { id: 'CUP-9922', code: 'COMBOFULL15', type: 'PERCENT', value: 15, limit: 30, uses: 11, expiry: nextMonth, services: ['Combo Mantenimiento'], status: 'ACTIVO' },
-    { id: 'CUP-9923', code: 'FBG10KFIX', type: 'FIXED', value: 10000, limit: 20, uses: 19, expiry: nextMonth, services: ['Mantenimiento PC'], status: 'ACTIVO' },
-    { id: 'CUP-9918', code: 'CYBERPROMO', type: 'PERCENT', value: 25, limit: 50, uses: 50, expiry: '2026-09-15', services: ['Armado PC Gamer', 'Mantenimiento PC'], status: 'EXPIRADO' }
+    { id: 'CUP-9921', code: 'FBGGAMER20', type: 'PERCENT', value: 20, limit: 50, uses: 32, expiry: nextMonth, services: ['Armados'], status: 'ACTIVO' },
+    { id: 'CUP-9922', code: 'COMBOFULL15', type: 'PERCENT', value: 15, limit: 30, uses: 11, expiry: nextMonth, services: ['Mantenimientos'], status: 'ACTIVO' },
+    { id: 'CUP-9923', code: 'FBG10KFIX', type: 'FIXED', value: 10000, limit: 20, uses: 19, expiry: nextMonth, services: ['Mantenimientos'], status: 'ACTIVO' },
+    { id: 'CUP-9918', code: 'CYBERPROMO', type: 'PERCENT', value: 25, limit: 50, uses: 50, expiry: '2026-09-15', services: ['Armados', 'Mantenimientos'], status: 'EXPIRADO' }
   ];
   localStorage.setItem('fbg_coupons', JSON.stringify(defaultCoupons));
   return defaultCoupons;
@@ -173,7 +186,7 @@ function renderTable() {
     let servicesHTML = '';
     if (c.services && c.services.length > 0) {
       if (c.services.length === 4) {
-        servicesHTML = `<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-[11px] w-full text-center">Todos los servicios</span>`;
+        servicesHTML = `<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-[11px] w-full text-center">Todas las categorías</span>`;
       } else {
         const shortNames = c.services.map(s => {
           if (s === 'Mantenimientos') return 'Mantenimiento';
@@ -295,7 +308,7 @@ function clearLogs() {
     '¿Estás seguro de que deseas borrar permanentemente todo el historial de canjes del laboratorio? Esta acción no se puede deshacer.', 
     () => {
       localStorage.removeItem('fbg_coupon_logs');
-      renderLiveFeed(); // Vuelve a dibujar el feed (que ahora estará vacío)
+      renderLiveFeed(); 
       showToast('// HISTORIAL DE CANJES ELIMINADO');
     }
   );
@@ -342,7 +355,7 @@ function openModal() {
   document.getElementById('couponModal').classList.remove('hidden');
   document.getElementById('modalTitle').innerText = 'Crear Cupón // FBG LAB';
   document.getElementById('couponCodeInput').value = '';
-  document.getElementById('isTestCoupon').checked = false; // <-- LÍNEA NUEVA
+  document.getElementById('isTestCoupon').checked = false;
   editingCouponId = null;
   
   document.getElementById('checkAllServices').checked = false;
@@ -418,12 +431,12 @@ function handleFormSubmit(e) {
   const val = Number(document.getElementById('discountNumber').value);
   const uses = Number(document.getElementById('limitUses').value) || 50;
   const expiry = document.getElementById('dateEnd').value;
-  const isTest = document.getElementById('isTestCoupon').checked; // <-- LÍNEA NUEVA
+  const isTest = document.getElementById('isTestCoupon').checked;
   
   const selectedServices = Array.from(document.querySelectorAll('.service-checkbox:checked')).map(cb => cb.value);
 
   if (selectedServices.length === 0) {
-    showToast('Debes seleccionar al menos un servicio.', true);
+    showToast('Debes seleccionar al menos una categoría.', true);
     return;
   }
   
@@ -438,7 +451,7 @@ function handleFormSubmit(e) {
       coupons[index].limit = uses;
       coupons[index].expiry = expiry;
       coupons[index].services = selectedServices;
-      coupons[index].isTest = isTest; // <-- LÍNEA NUEVA
+      coupons[index].isTest = isTest;
     }
     showToast(`// CUPÓN '${code}' ACTUALIZADO`);
   } else {
@@ -451,7 +464,7 @@ function handleFormSubmit(e) {
       uses: 0,
       expiry: expiry,
       services: selectedServices,
-      isTest: isTest, // <-- LÍNEA NUEVA
+      isTest: isTest,
       status: 'ACTIVO'
     };
     coupons.unshift(newCoupon);
@@ -477,15 +490,30 @@ function editCoupon(id) {
   document.getElementById('discountRange').value = c.value;
   document.getElementById('limitUses').value = c.limit;
   document.getElementById('dateEnd').value = c.expiry || '';
-  document.getElementById('isTestCoupon').checked = c.isTest || false; // <-- LÍNEA NUEVA
+  document.getElementById('isTestCoupon').checked = c.isTest || false;
   
   document.getElementById('checkAllServices').checked = false;
   document.getElementById('checkAllServices').indeterminate = false;
   document.querySelectorAll('.service-checkbox').forEach(cb => cb.checked = false);
   
   if (c.services && c.services.length > 0) {
+    const oldToNewMap = {
+      'Armado PC Gamer': 'Armados',
+      'Armado PC básica': 'Armados',
+      'Mantenimiento PC': 'Mantenimientos',
+      'Diagnóstico / Revisión': 'Mantenimientos',
+      'Combo Mantenimiento': 'Mantenimientos',
+      'Formateo + SO': 'Mantenimientos',
+      'Limpieza de Hardware': 'Mantenimientos',
+      'Notebooks y Consolas': 'Mantenimientos',
+      'Limpieza de periféricos': 'Mantenimientos',
+      'Conexión remota': 'Visitas y Remotos',
+      'Visita a domicilio': 'Visitas y Remotos'
+    };
+
     document.querySelectorAll('.service-checkbox').forEach(cb => {
-      if (c.services.includes(cb.value)) cb.checked = true;
+      const hasService = c.services.includes(cb.value) || c.services.some(s => oldToNewMap[s] === cb.value);
+      if (hasService) cb.checked = true;
     });
   }
   
