@@ -176,10 +176,10 @@ function renderTable() {
         servicesHTML = `<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-[11px] w-full text-center">Todos los servicios</span>`;
       } else {
         const shortNames = c.services.map(s => {
-          if (s === 'Armado PC Gamer') return 'Gamer';
-          if (s === 'Combo Mantenimiento') return 'Combo';
-          if (s === 'Mantenimiento PC') return 'Mantenimiento';
-          if (s === 'Diagnóstico / Revisión') return 'Diagnóstico';
+          if (s === 'Mantenimientos') return 'Mantenimiento';
+          if (s === 'Armados') return 'Armados';
+          if (s === 'Visitas y Remotos') return 'Remotos';
+          if (s === 'Demás Trabajos') return 'Demás';
           return s;
         });
         
@@ -202,6 +202,7 @@ function renderTable() {
       <td class="py-3 px-1 sm:px-2">
         <div class="flex items-center gap-1.5">
           <span class="px-2 py-1 rounded bg-[#05060b] border ${borderColor} font-bold shadow-[0_0_10px_rgba(0,240,255,0.25)] ${isExpired ? 'line-through text-slate-500 border-slate-700' : ''} text-xs">${c.code}</span>
+          ${c.isTest ? `<span class="px-1.5 py-0.5 rounded bg-cyber-gold/20 border border-cyber-gold/40 text-cyber-gold text-[9px] font-bold">TEST</span>` : ''}
           <button onclick="copyCode('${c.code}')" title="Copiar Enlace" class="text-slate-500 hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-[15px]">link</span>
           </button>
@@ -341,6 +342,7 @@ function openModal() {
   document.getElementById('couponModal').classList.remove('hidden');
   document.getElementById('modalTitle').innerText = 'Crear Cupón // FBG LAB';
   document.getElementById('couponCodeInput').value = '';
+  document.getElementById('isTestCoupon').checked = false; // <-- LÍNEA NUEVA
   editingCouponId = null;
   
   document.getElementById('checkAllServices').checked = false;
@@ -416,6 +418,7 @@ function handleFormSubmit(e) {
   const val = Number(document.getElementById('discountNumber').value);
   const uses = Number(document.getElementById('limitUses').value) || 50;
   const expiry = document.getElementById('dateEnd').value;
+  const isTest = document.getElementById('isTestCoupon').checked; // <-- LÍNEA NUEVA
   
   const selectedServices = Array.from(document.querySelectorAll('.service-checkbox:checked')).map(cb => cb.value);
 
@@ -435,6 +438,7 @@ function handleFormSubmit(e) {
       coupons[index].limit = uses;
       coupons[index].expiry = expiry;
       coupons[index].services = selectedServices;
+      coupons[index].isTest = isTest; // <-- LÍNEA NUEVA
     }
     showToast(`// CUPÓN '${code}' ACTUALIZADO`);
   } else {
@@ -447,6 +451,7 @@ function handleFormSubmit(e) {
       uses: 0,
       expiry: expiry,
       services: selectedServices,
+      isTest: isTest, // <-- LÍNEA NUEVA
       status: 'ACTIVO'
     };
     coupons.unshift(newCoupon);
@@ -472,6 +477,7 @@ function editCoupon(id) {
   document.getElementById('discountRange').value = c.value;
   document.getElementById('limitUses').value = c.limit;
   document.getElementById('dateEnd').value = c.expiry || '';
+  document.getElementById('isTestCoupon').checked = c.isTest || false; // <-- LÍNEA NUEVA
   
   document.getElementById('checkAllServices').checked = false;
   document.getElementById('checkAllServices').indeterminate = false;
@@ -603,4 +609,19 @@ function setFilter(type) {
 
 window.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
+});
+
+// Escuchar cuando la página vuelve a estar visible (al cambiar de pestaña o volver con el botón Atrás)
+window.addEventListener('pageshow', function(event) {
+  // Si el usuario está logueado, forzamos el redibujado de la tabla y los KPIs
+  if (sessionStorage.getItem('fbg_admin_logged') === 'true') {
+    renderTable();
+  }
+});
+
+// Escuchar cuando el documento vuelve a tener el foco (por si acaso)
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && sessionStorage.getItem('fbg_admin_logged') === 'true') {
+    renderTable();
+  }
 });

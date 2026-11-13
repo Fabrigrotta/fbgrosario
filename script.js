@@ -189,7 +189,8 @@
       let couponData = availableCoupons[rawCode];
       const usedCoupons = getUsedCoupons();
 
-      if (usedCoupons.includes(rawCode)) {
+      // Si el cupón no es de prueba y ya fue usado, lo bloquea
+      if (usedCoupons.includes(rawCode) && !couponData?.isTest) {
         pendingCoupon = null;
         errorAlert?.classList.remove('hidden');
         successAlert?.classList.add('hidden');
@@ -331,21 +332,7 @@
       const isPercent = discountData.type === 'PERCENT';
       const val = discountData.value;
       const categories = discountData.services || []; 
-      const applyToAll = categories.length === 0; 
-
-      const serviceToCategory = {
-        'Diagnóstico / Revisión': 'Mantenimientos',
-        'Mantenimiento PC': 'Mantenimientos',
-        'Combo Mantenimiento': 'Mantenimientos',
-        'Armado PC Gamer': 'Armados',
-        'Formateo + SO': 'Mantenimientos',
-        'Limpieza de Hardware': 'Mantenimientos',
-        'Notebooks y Consolas': 'Mantenimientos',
-        'Limpieza de periféricos': 'Mantenimientos',
-        'Armado PC básica': 'Armados',
-        'Conexión remota': 'Remotos',
-        'Visita a domicilio': 'Remotos'
-      };
+      const applyToAll = categories.length === 0;
 
       // 1. Actualizar Tarjetas Destacadas
       let anyCardDiscounted = false;
@@ -356,8 +343,11 @@
         const originalHref = btn ? btn.getAttribute('href') : null;
         const cardTitle = card ? card.querySelector('h3').innerText.trim() : '';
         
-        const categoryOfCard = serviceToCategory[cardTitle];
-        const applyDiscountHere = applyToAll || categories.includes('Destacados') || categories.includes(categoryOfCard);
+        let categoryOfCard = '';
+        if (cardTitle.includes('Armado')) categoryOfCard = 'Armados';
+        else if (cardTitle.includes('Mantenimiento') || cardTitle.includes('Diagnóstico') || cardTitle.includes('Combo')) categoryOfCard = 'Mantenimientos';
+        
+        const applyDiscountHere = applyToAll || categories.includes(categoryOfCard);
 
         if (val > 0 && applyDiscountHere) {
           anyCardDiscounted = true;
@@ -399,19 +389,22 @@
       $$('.price-table').forEach((span) => {
         const basePrice = parseInt(span.getAttribute('data-base'), 10);
         const parent = span.parentElement;
-        const rowText = parent.parentElement.innerText.trim();
+        const row = parent.closest('.price-row'); 
+        const section = row.closest('.rounded-2xl'); 
+        let sectionTitle = '';
         
-        const isMantenimiento = rowText.includes('Formateo') || rowText.includes('Limpieza') || rowText.includes('Combo') || rowText.includes('Diagnostico') || rowText.includes('Backup') || rowText.includes('Reparacion') || rowText.includes('Instalacion') || rowText.includes('Eliminacion') || rowText.includes('Cambio') || rowText.includes('Hard reset') || rowText.includes('Clonacion');
-        const isRemoto = rowText.includes('Conexion') || rowText.includes('Visita');
-        const isArmado = rowText.includes('Armado');
-
-        let applyHere = applyToAll;
-        if (!applyToAll) {
-          if (categories.includes('Mantenimientos') && isMantenimiento) applyHere = true;
-          if (categories.includes('Armados') && isArmado) applyHere = true;
-          if (categories.includes('Remotos') && isRemoto) applyHere = true;
-          if (categories.includes('Destacados')) applyHere = false; // Destacados no toca la tabla general
+        if (section) {
+          const h3 = section.querySelector('h3');
+          if (h3) sectionTitle = h3.innerText.trim();
         }
+
+        let categoryOfRow = '';
+        if (sectionTitle === 'MANTENIMIENTOS') categoryOfRow = 'Mantenimientos';
+        else if (sectionTitle === 'ARMADOS') categoryOfRow = 'Armados';
+        else if (sectionTitle === 'REMOTOS Y VISITAS') categoryOfRow = 'Visitas y Remotos';
+        else if (sectionTitle === 'DEMÁS TRABAJOS') categoryOfRow = 'Demás Trabajos';
+
+        const applyHere = applyToAll || categories.includes(categoryOfRow);
 
         if (val > 0 && applyHere) {
           anyTableDiscounted = true;

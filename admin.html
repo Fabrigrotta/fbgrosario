@@ -354,6 +354,16 @@
   </div>
 </div>
 
+<!-- ACÁ VA EL NUEVO CHECKBOX -->
+<div class="flex items-center gap-3 p-3 bg-[#05060b] border border-slate-800 rounded-xl mt-2">
+  <input type="checkbox" id="isTestCoupon" class="w-4 h-4 accent-cyber-gold rounded cursor-pointer">
+  <div class="flex flex-col">
+    <label for="isTestCoupon" class="text-cyber-gold font-bold cursor-pointer">// CUPÓN DE PRUEBA (ILIMITADO)</label>
+    <span class="text-[10px] text-slate-400">Permite usarlo varias veces desde el mismo dispositivo.</span>
+  </div>
+</div>
+<!-- FIN DEL CHECKBOX -->
+
 <!-- Selección de Servicios -->
 <div class="flex flex-col gap-1.5 mt-2">
   <div class="flex justify-between items-center">
@@ -366,19 +376,19 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-[#05060b] border border-slate-800 p-3 rounded-xl">
     <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
       <input class="service-checkbox accent-primary rounded bg-[#05060b] border-slate-700" name="services" type="checkbox" value="Mantenimientos" onchange="checkAllStatus()">
-      <span>Mantenimientos (y Combos)</span>
+      <span>Mantenimientos</span>
     </label>
     <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
       <input class="service-checkbox accent-primary rounded bg-[#05060b] border-slate-700" name="services" type="checkbox" value="Armados" onchange="checkAllStatus()">
-      <span>Armados (PC Básica y Gamer)</span>
+      <span>Armados</span>
     </label>
     <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
-      <input class="service-checkbox accent-primary rounded bg-[#05060b] border-slate-700" name="services" type="checkbox" value="Remotos" onchange="checkAllStatus()">
-      <span>Remotos y Visitas</span>
+      <input class="service-checkbox accent-primary rounded bg-[#05060b] border-slate-700" name="services" type="checkbox" value="Visitas y Remotos" onchange="checkAllStatus()">
+      <span>Visitas y Remotos</span>
     </label>
     <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
-      <input class="service-checkbox accent-primary rounded bg-[#05060b] border-slate-700" name="services" type="checkbox" value="Destacados" onchange="checkAllStatus()">
-      <span>Solo Tarjetas Destacadas</span>
+      <input class="service-checkbox accent-primary rounded bg-[#05060b] border-slate-700" name="services" type="checkbox" value="Demás Trabajos" onchange="checkAllStatus()">
+      <span>Demás Trabajos</span>
     </label>
   </div>
 </div>
