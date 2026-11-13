@@ -152,16 +152,40 @@
     function openModal() {
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
+      
+      // Si ya había un cupón pendiente (aplicado), restauramos el cartel verde
+      if (pendingCoupon) {
+        const rawCode = pendingCoupon.code;
+        const isPercent = pendingCoupon.type === 'PERCENT';
+        const val = pendingCoupon.value;
+        const typeStr = isPercent ? '%' : '$';
+
+        errorAlert?.classList.add('hidden');
+        successAlert?.classList.remove('hidden');
+        if (successMsg) {
+          successMsg.innerText = `¡CUPÓN VÁLIDO! ${rawCode} aplica ${typeStr}${val} de descuento.`;
+        }
+
+        if (applyBtn) {
+          applyBtn.innerHTML = `<span class="material-symbols-outlined text-sm">check_circle</span><span>Aplicar Descuento</span>`;
+          applyBtn.classList.remove('bg-gradient-to-r', 'from-secondary', 'to-primary', 'text-white');
+          applyBtn.classList.add('bg-emerald-500', 'border-emerald-400', 'text-black');
+        }
+      } else {
+        // Si no hay cupón, limpiamos todo
+        resetApplyBtn();
+        errorAlert?.classList.add('hidden');
+        successAlert?.classList.add('hidden');
+      }
+
       setTimeout(() => input && input.focus(), 60);
     }
 
     function closeModal() {
       modal.classList.add('hidden');
-      errorAlert?.classList.add('hidden');
-      successAlert?.classList.add('hidden');
       document.body.style.overflow = '';
-      pendingCoupon = null;
-      resetApplyBtn();
+      // NO borramos pendingCoupon ni el cartel verde acá.
+      // Dejamos que se mantenga en memoria para cuando se vuelva a abrir.
     }
 
     function resetApplyBtn() {
