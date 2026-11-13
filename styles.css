@@ -154,3 +154,11 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 @media (min-width: 641px) and (max-width: 1023px) {
   .hero-title { letter-spacing: -0.02em; }
 }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}

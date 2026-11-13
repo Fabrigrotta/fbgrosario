@@ -330,8 +330,25 @@
     function updateAllPrices(discountData) {
       const isPercent = discountData.type === 'PERCENT';
       const val = discountData.value;
-      const applyToAll = !discountData.services || discountData.services.length === 0;
+      const categories = discountData.services || []; 
+      const applyToAll = categories.length === 0; 
 
+      const serviceToCategory = {
+        'Diagnóstico / Revisión': 'Mantenimientos',
+        'Mantenimiento PC': 'Mantenimientos',
+        'Combo Mantenimiento': 'Mantenimientos',
+        'Armado PC Gamer': 'Armados',
+        'Formateo + SO': 'Mantenimientos',
+        'Limpieza de Hardware': 'Mantenimientos',
+        'Notebooks y Consolas': 'Mantenimientos',
+        'Limpieza de periféricos': 'Mantenimientos',
+        'Armado PC básica': 'Armados',
+        'Conexión remota': 'Remotos',
+        'Visita a domicilio': 'Remotos'
+      };
+
+      // 1. Actualizar Tarjetas Destacadas
+      let anyCardDiscounted = false;
       $$('[data-price-container]').forEach((container) => {
         const basePrice = parseInt(container.getAttribute('data-price-container'), 10);
         const card = container.closest('.cyber-plan-card');
@@ -339,9 +356,11 @@
         const originalHref = btn ? btn.getAttribute('href') : null;
         const cardTitle = card ? card.querySelector('h3').innerText.trim() : '';
         
-        const applyDiscountHere = applyToAll || discountData.services.includes(cardTitle);
+        const categoryOfCard = serviceToCategory[cardTitle];
+        const applyDiscountHere = applyToAll || categories.includes('Destacados') || categories.includes(categoryOfCard);
 
         if (val > 0 && applyDiscountHere) {
+          anyCardDiscounted = true;
           let discounted = basePrice;
           let badgeText = '';
           if (isPercent) {
@@ -369,11 +388,33 @@
         if (btn && originalHref) btn.setAttribute('href', originalHref);
       });
 
+      const alertCards = document.getElementById('alert-cards-discount');
+      if (alertCards) {
+        if (anyCardDiscounted) alertCards.classList.remove('hidden');
+        else alertCards.classList.add('hidden');
+      }
+
+      // 2. Actualizar Tabla Tarifario
+      let anyTableDiscounted = false;
       $$('.price-table').forEach((span) => {
         const basePrice = parseInt(span.getAttribute('data-base'), 10);
         const parent = span.parentElement;
+        const rowText = parent.parentElement.innerText.trim();
+        
+        const isMantenimiento = rowText.includes('Formateo') || rowText.includes('Limpieza') || rowText.includes('Combo') || rowText.includes('Diagnostico') || rowText.includes('Backup') || rowText.includes('Reparacion') || rowText.includes('Instalacion') || rowText.includes('Eliminacion') || rowText.includes('Cambio') || rowText.includes('Hard reset') || rowText.includes('Clonacion');
+        const isRemoto = rowText.includes('Conexion') || rowText.includes('Visita');
+        const isArmado = rowText.includes('Armado');
 
-        if (val > 0 && applyToAll) {
+        let applyHere = applyToAll;
+        if (!applyToAll) {
+          if (categories.includes('Mantenimientos') && isMantenimiento) applyHere = true;
+          if (categories.includes('Armados') && isArmado) applyHere = true;
+          if (categories.includes('Remotos') && isRemoto) applyHere = true;
+          if (categories.includes('Destacados')) applyHere = false; // Destacados no toca la tabla general
+        }
+
+        if (val > 0 && applyHere) {
+          anyTableDiscounted = true;
           let discounted = basePrice;
           let badgeText = '';
           if (isPercent) {
@@ -395,6 +436,12 @@
             <span class="font-mono font-bold text-white group-hover:text-secondary transition-colors price-table whitespace-nowrap" data-base="${basePrice}">${formatARSTable(basePrice)}</span>`;
         }
       });
+
+      const alertTable = document.getElementById('alert-table-discount');
+      if (alertTable) {
+        if (anyTableDiscounted && applyToAll) alertTable.classList.remove('hidden');
+        else alertTable.classList.add('hidden');
+      }
     }
 
     openBtns.forEach((btn) => btn && btn.addEventListener('click', openModal));
